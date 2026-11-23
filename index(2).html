@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tebas · Arquitetura, cidades e futuro</title>
+<meta name="description" content="Tebas: portal sobre arquitetura, urbanismo, dados, cidades inteligentes e sustentabilidade. O futuro das cidades, sem esquecer quem as construiu.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root{
+  --bg:#F4EFE6; --paper:#FAF7F1; --ink:#1A1916; --muted:#5F5B53; --soft:#8C867B;
+  --line:#E2D9CA; --accent:#C2603F; --accent-dark:#A44F33; --black:#141413;
+  --serif:"Helvetica Neue", Helvetica, Arial, sans-serif; --sans:"Helvetica Neue", Helvetica, Arial, sans-serif;
+  --max:1180px; --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+
+/* Só minúsculas na interface; maiúsculas apenas no texto corrido e nas postagens */
+body{text-transform:lowercase}
+p,blockquote,cite,input,textarea{text-transform:none}
+.post-corpo,.post-corpo *,.aviso{text-transform:lowercase}
+em{font-style:normal}
+h1,h2,h3,blockquote,.numeros strong{font-weight:500;letter-spacing:-.035em}
+h1{font-weight:700;letter-spacing:-.045em}
+
+/* Barra de progresso */
+#progresso{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60;transition:width .1s linear}
+
+/* Cabeçalho */
+header{position:sticky;top:0;z-index:50;background:rgba(244,239,230,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .3s,padding .3s}
+header.rolado{border-bottom-color:var(--line)}
+.topo{display:flex;align-items:center;justify-content:space-between;height:72px;transition:height .3s var(--ease)}
+header.rolado .topo{height:60px}
+.marca,.rodape-marca{display:inline-flex;align-items:flex-end;gap:9px;font-family:var(--sans);font-weight:500;letter-spacing:-.04em;line-height:1}
+.marca{font-size:26px;color:var(--ink)}
+.esquadro{width:1em;height:1em;fill:currentColor;flex:none;transition:transform .5s var(--ease)}
+.marca:hover .esquadro{transform:rotate(-8deg)}
+.marca span,.rodape-marca span{position:relative;top:.04em}
+nav.principal{display:flex;gap:30px;font-size:15px}
+nav.principal a{color:var(--muted);position:relative;padding:4px 0;transition:color .2s}
+nav.principal a::after{content:"";position:absolute;left:0;bottom:-2px;height:1px;width:0;background:var(--ink);transition:width .3s var(--ease)}
+nav.principal a:hover,nav.principal a.ativo{color:var(--ink)}
+nav.principal a:hover::after,nav.principal a.ativo::after{width:100%}
+.botao-menu{display:none;background:none;border:0;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}
+
+/* Botões */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-size:15px;font-weight:500;transition:transform .25s var(--ease),background .25s,color .25s;cursor:pointer;border:0;font-family:var(--sans)}
+.btn-escuro{background:var(--ink);color:var(--paper)}
+.btn-escuro:hover{background:var(--accent);transform:translateY(-2px)}
+.btn-linha{border:1px solid var(--ink);color:var(--ink);background:transparent}
+.btn-linha:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+.seta{transition:transform .25s var(--ease)}
+.btn:hover .seta,.card:hover .seta,.item-lista:hover .seta{transform:translateX(4px)}
+
+/* Animações de entrada ao rolar */
+.revelar{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.revelar.visto{opacity:1;transform:none}
+.revelar.fim{transition-delay:0s!important}
+.atraso-1{transition-delay:.08s}.atraso-2{transition-delay:.16s}.atraso-3{transition-delay:.24s}.atraso-4{transition-delay:.32s}
+.linha-titulo{display:block;overflow:hidden}
+.linha-titulo>span{display:block;transform:translateY(105%);transition:transform 1.1s var(--ease)}
+.visto .linha-titulo>span{transform:none}
+.visto .linha-titulo:nth-child(2)>span{transition-delay:.1s}
+.visto .linha-titulo:nth-child(3)>span{transition-delay:.2s}
+@media (prefers-reduced-motion:reduce){
+  .revelar,.linha-titulo>span{opacity:1!important;transform:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+
+/* Páginas */
+.pagina{display:none}
+.pagina.visivel{display:block}
+
+/* Hero */
+.hero{padding:110px 0 90px}
+.rotulo{font-size:14px;letter-spacing:0;text-transform:lowercase;color:var(--accent);font-weight:600;margin-bottom:22px}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.4vw,96px);line-height:1.02;letter-spacing:-.03em;max-width:13ch}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero-baixo{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;margin-top:56px;align-items:end}
+.hero-baixo p{font-size:20px;color:var(--muted);max-width:34ch;line-height:1.5}
+.hero-acoes{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+
+/* Seções */
+section.bloco{padding:110px 0;border-top:1px solid var(--line)}
+.cabeca{display:grid;grid-template-columns:1fr 1.4fr;gap:48px;margin-bottom:56px;align-items:end}
+.cabeca h2{font-family:var(--serif);font-weight:400;font-size:clamp(34px,4.6vw,58px);line-height:1.05;letter-spacing:-.02em}
+.cabeca p{color:var(--muted);font-size:18px;max-width:52ch}
+
+/* Grafo */
+.grafo-area{display:grid;grid-template-columns:1fr 320px;gap:20px}
+#grafo{position:relative;height:640px;background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+#grafo svg{width:100%;height:100%;display:block;cursor:grab}
+#grafo svg:active{cursor:grabbing}
+.dica{position:absolute;left:18px;bottom:14px;font-size:12px;color:var(--soft);pointer-events:none}
+#tooltip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:13px;padding:6px 10px;border-radius:8px;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:5}
+.painel{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px;display:flex;flex-direction:column}
+.painel .rotulo{margin-bottom:12px}
+.painel h3{font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.15;margin-bottom:12px}
+.painel p{color:var(--muted);font-size:15px}
+.painel .conexoes{margin-top:18px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);cursor:pointer;transition:all .2s;background:transparent;font-family:var(--sans)}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.painel .acoes{margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:10px}
+.legenda{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.legenda button{display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;transition:opacity .2s,border-color .2s;font-family:var(--sans)}
+.legenda button:hover{border-color:var(--ink)}
+.legenda button.off{opacity:.35}
+.legenda i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* Cards de temas */
+.grade{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:30px;display:flex;flex-direction:column;min-height:270px;transition:opacity .9s var(--ease),transform .5s var(--ease),box-shadow .4s var(--ease),border-color .3s}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px -24px rgba(26,25,22,.35);border-color:#d3c8b6}
+.card .num{font-family:var(--serif);font-size:15px;color:var(--soft)}
+.card .arte{margin:-30px -30px 22px;border-radius:19px 19px 0 0;overflow:hidden;border-bottom:1px solid var(--line)}
+.card .arte svg,.arte-grande svg,.arte-mini svg{display:block;width:100%;height:auto;transition:transform 1s var(--ease)}
+.card:hover .arte svg{transform:scale(1.05)}
+.desenho .fundo{display:none}
+.desenho .cor{opacity:.78}
+.desenho .hachura *{fill:url(#hachura);stroke:none}
+.desenho .hachura{opacity:.32;mix-blend-mode:multiply}
+.desenho .traco *{fill:none}
+.desenho .traco{opacity:.55}
+.arte-grande{margin-top:44px;border-radius:24px;overflow:hidden;border:1px solid var(--line);max-height:440px}
+.arte-mini{margin:-26px -26px 18px;border-radius:19px 19px 0 0;overflow:hidden;border-bottom:1px solid var(--line)}
+.card h3{font-family:var(--serif);font-weight:500;font-size:24px;line-height:1.15;margin:10px 0 12px}
+.card p{color:var(--muted);font-size:15px}
+.card .rodape-card{margin-top:auto;padding-top:20px;display:flex;justify-content:space-between;font-size:14px;color:var(--ink);font-weight:500}
+
+/* Citação */
+.citacao{padding:140px 0;text-align:left}
+.citacao blockquote{font-family:var(--serif);font-size:clamp(30px,4.2vw,52px);line-height:1.18;letter-spacing:-.015em;max-width:22ch}
+.citacao blockquote em{color:var(--accent);font-style:normal}
+.citacao cite{display:block;margin-top:30px;font-style:normal;color:var(--muted);font-size:15px}
+
+/* Números */
+.numeros{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line)}
+.numeros div{padding:44px 0;border-right:1px solid var(--line);padding-left:28px}
+.numeros div:first-child{padding-left:0}
+.numeros div:last-child{border-right:0}
+.numeros strong{display:block;font-family:var(--serif);font-weight:400;font-size:clamp(56px,8vw,104px);line-height:1;letter-spacing:-.03em}
+.numeros span{color:var(--muted);font-size:15px}
+
+/* Newsletter */
+.chamada{background:var(--paper);border:1px solid var(--line);border-radius:28px;padding:64px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
+.chamada h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.8vw,46px);line-height:1.08}
+.chamada form{display:flex;gap:10px;flex-wrap:wrap}
+.chamada input{flex:1;min-width:200px;padding:14px 18px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font:inherit;font-size:15px;color:var(--ink)}
+.chamada input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.nota{font-size:13px;color:var(--soft);margin-top:10px}
+
+/* Diretório de tema e post */
+.diretorio{padding:90px 0 110px}
+.trilha{font-size:14px;color:var(--soft);margin-bottom:26px}
+.trilha a:hover{color:var(--ink)}
+.diretorio h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,5.6vw,72px);line-height:1.04;letter-spacing:-.025em;max-width:18ch}
+.diretorio .intro{font-size:20px;color:var(--muted);margin-top:22px;max-width:52ch}
+.faixa{height:6px;width:80px;border-radius:999px;margin-bottom:28px}
+.lista{margin-top:60px;border-top:1px solid var(--line)}
+.item-lista{display:grid;grid-template-columns:60px 1fr auto;gap:20px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line);transition:opacity .9s var(--ease),transform .9s var(--ease),padding .35s var(--ease),background .3s}
+.item-lista:hover{padding-left:14px;background:rgba(250,247,241,.7)}
+.item-lista .n{font-family:var(--serif);color:var(--soft)}
+.item-lista h3{font-family:var(--serif);font-weight:500;font-size:23px;line-height:1.2}
+.item-lista p{color:var(--muted);font-size:14.5px;margin-top:4px}
+.selo{font-size:12px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.selo.pronto{border-color:var(--accent);color:var(--accent)}
+.post-corpo{max-width:720px;margin-top:50px}
+.post-corpo p{font-size:19px;line-height:1.7;color:#2D2B27;margin-bottom:22px}
+.aviso{background:var(--paper);border:1px dashed #cbbfa9;border-radius:18px;padding:26px;margin:36px 0;color:var(--muted)}
+.relacionados{margin-top:50px}
+.relacionados h2{font-family:var(--serif);font-weight:500;font-size:26px;margin-bottom:18px}
+
+/* Portfólio */
+.cards-port{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;margin-top:60px}
+.trabalho .imagem{aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#E9E0D1,#DCCFBA);display:flex;align-items:center;justify-content:center;color:var(--soft);font-size:14px}
+.trabalho .imagem img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.trabalho:hover .imagem img{transform:scale(1.04)}
+.trabalho .meta{margin-top:18px;font-size:14px;letter-spacing:0;text-transform:lowercase;color:var(--accent);font-weight:600}
+.trabalho h3{font-family:var(--serif);font-weight:500;font-size:28px;margin:6px 0 8px}
+.trabalho p{color:var(--muted)}
+
+/* Sobre */
+.sobre-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:64px;margin-top:60px;align-items:start}
+.foto{aspect-ratio:4/5;border-radius:22px;background:linear-gradient(160deg,#E6DCCB,#D4C5AD);display:flex;align-items:center;justify-content:center;color:var(--soft);overflow:hidden;position:sticky;top:100px}
+.foto img{width:100%;height:100%;object-fit:cover}
+.sobre-texto h2{font-family:var(--serif);font-weight:500;font-size:30px;margin:0 0 14px}
+.sobre-texto h2:not(:first-child){margin-top:48px}
+.sobre-texto p{font-size:18px;color:#2D2B27;margin-bottom:16px}
+.destaque{font-family:var(--serif);font-size:26px;line-height:1.3;color:var(--ink);border-left:3px solid var(--accent);padding-left:22px;margin:34px 0}
+.contatos{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+
+/* Rodapé preto */
+footer{background:var(--black);color:#E8E3D9;margin-top:40px;padding:90px 0 36px}
+.rodape-topo{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;padding-bottom:70px;border-bottom:1px solid #2E2D2A}
+.rodape-marca{font-size:40px;color:#F2EEE6}
+.rodape-topo p{color:#9C978C;font-size:15px;margin-top:16px;max-width:30ch}
+footer h4{font-size:14px;letter-spacing:0;text-transform:lowercase;color:#7F7A70;font-weight:600;margin-bottom:18px}
+footer ul{list-style:none}
+footer li{margin-bottom:10px}
+footer li a{color:#E8E3D9;font-size:15px;transition:color .2s}
+footer li a:hover{color:var(--accent)}
+.rodape-gigante{font-family:var(--sans);font-weight:500;font-size:clamp(80px,17vw,230px);line-height:.9;letter-spacing:-.05em;color:#23221F;padding:50px 0 24px;user-select:none}
+.rodape-baixo{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px;color:#7F7A70}
+
+/* Responsivo */
+@media (max-width:960px){
+  .grafo-area{grid-template-columns:1fr}
+  #grafo{height:520px}
+  .grade{grid-template-columns:repeat(2,1fr)}
+  .cabeca,.hero-baixo,.chamada,.sobre-grid{grid-template-columns:1fr}
+  .hero-acoes{justify-content:flex-start}
+  .rodape-topo{grid-template-columns:1fr 1fr}
+  .foto{position:static;max-width:380px}
+}
+@media (max-width:680px){
+  body{font-size:16px}
+  nav.principal{display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg);flex-direction:column;gap:0;padding:8px 24px 18px;border-bottom:1px solid var(--line)}
+  nav.principal.aberto{display:flex}
+  nav.principal a{padding:12px 0;font-size:17px}
+  .botao-menu{display:block}
+  .hero{padding:70px 0 60px}
+  section.bloco{padding:80px 0}
+  .grade,.cards-port{grid-template-columns:1fr}
+  .numeros{grid-template-columns:1fr}
+  .numeros div{border-right:0;border-bottom:1px solid var(--line);padding-left:0}
+  .chamada{padding:34px 24px}
+  #grafo{height:440px}
+  .item-lista{grid-template-columns:36px 1fr}
+  .item-lista .selo{grid-column:2;justify-self:start}
+  .rodape-topo{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="progresso"></div>
+<!-- Filtros que dão às ilustrações o aspecto de desenho a lápis -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="lapis" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" result="onda"/>
+      <feDisplacementMap in="SourceGraphic" in2="onda" scale="4" xChannelSelector="R" yChannelSelector="G" result="tremido"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="8" result="grao"/>
+      <feColorMatrix in="grao" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2.2 0 0 0 -0.35" result="mascara"/>
+      <feComposite in="tremido" in2="mascara" operator="in"/>
+    </filter>
+    <filter id="lapis2" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="11" result="onda"/>
+      <feDisplacementMap in="SourceGraphic" in2="onda" scale="5" xChannelSelector="R" yChannelSelector="G" result="tremido"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="21" result="grao"/>
+      <feColorMatrix in="grao" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2.4 0 0 0 -0.7" result="mascara"/>
+      <feComposite in="tremido" in2="mascara" operator="in"/>
+    </filter>
+    <filter id="papel">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="5" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.36  0 0 0 0 0.32  0 0 0 0 0.26  0 0 0 0.09 0" result="fibra"/>
+      <feComposite in="fibra" in2="SourceGraphic" operator="in" result="f2"/>
+      <feBlend in="SourceGraphic" in2="f2" mode="multiply"/>
+    </filter>
+    <pattern id="hachura" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+      <line x1="0" y1="0" x2="0" y2="5" stroke="#3B3631" stroke-width="0.9"/>
+    </pattern>
+  </defs>
+</svg>
+
+<header id="cabecalho">
+  <div class="wrap topo">
+    <a href="#inicio" class="marca" aria-label="tebas, início"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M10 19.5 H19.5 V10 Z"/></svg><span>tebas</span></a>
+    <button class="botao-menu" id="botaoMenu" aria-label="Abrir menu">Menu</button>
+    <nav class="principal" id="menu">
+      <a href="#inicio" data-pagina="inicio">Início</a>
+      <a href="#temas" data-pagina="temas">Temas</a>
+      <a href="#portfolio" data-pagina="portfolio">Portfólio</a>
+      <a href="#sobre" data-pagina="sobre">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- INÍCIO -->
+  <div class="pagina" id="pg-inicio">
+    <section class="hero">
+      <div class="wrap">
+        <div class="rotulo revelar">Arquitetura · Cidades · Dados · Futuro</div>
+        <h1 class="revelar">
+          <span class="linha-titulo"><span>O futuro das</span></span>
+          <span class="linha-titulo"><span>cidades, sem</span></span>
+          <span class="linha-titulo"><span><em>esquecer</em> quem as construiu.</span></span>
+        </h1>
+        <div class="hero-baixo">
+          <p class="revelar atraso-2">Um portal sobre arquitetura, urbanismo, cidades inteligentes, clima e memória, para o público em geral e para quem está se formando na profissão.</p>
+          <div class="hero-acoes revelar atraso-3">
+            <a href="#explorar" class="btn btn-escuro" data-rolar="explorar">Explorar a cidade de ideias <span class="seta">→</span></a>
+            <a href="#sobre" class="btn btn-linha">Por que Tebas?</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bloco" id="explorar">
+      <div class="wrap">
+        <div class="cabeca">
+          <h2 class="revelar">Uma cidade de ideias</h2>
+          <p class="revelar atraso-1">Cada ponto é um assunto, e os maiores são os sete grandes temas. As linhas tracejadas ligam ideias de temas diferentes, como ruas que atravessam bairros. Clique em um ponto para abrir o diretório ou a futura postagem.</p>
+        </div>
+        <div class="grafo-area revelar atraso-2">
+          <div id="grafo"><div id="tooltip"></div><div class="dica">Arraste, aproxime e clique nos pontos</div></div>
+          <aside class="painel" id="painel">
+            <div class="rotulo">Escolha um ponto</div>
+            <h3>Comece por qualquer lugar</h3>
+            <p>Clique em um tema ou assunto para ver as conexões e acessar o conteúdo.</p>
+            <div class="conexoes"></div>
+            <div class="acoes"><a href="#temas" class="btn btn-linha">Ver todos os temas <span class="seta">→</span></a></div>
+          </aside>
+        </div>
+        <div class="legenda" id="legenda"></div>
+      </div>
+    </section>
+
+    <section class="bloco">
+      <div class="wrap">
+        <div class="cabeca">
+          <h2 class="revelar">Sete temas para os próximos cinquenta anos</h2>
+          <p class="revelar atraso-1">Do gêmeo digital à habitação de interesse social, do cinzel ao robô no canteiro. Cada tema é um diretório que reúne artigos, vídeos e estudos.</p>
+        </div>
+        <div class="grade" id="gradeTemas"></div>
+      </div>
+    </section>
+
+    <section class="citacao">
+      <div class="wrap">
+        <blockquote class="revelar">“Tebas” vem do tupi <em>teba</em>: forte, hábil, desembaraçado. Foi também o apelido de um construtor escravizado que ergueu a São Paulo colonial.</blockquote>
+        <cite class="revelar atraso-1">Joaquim Pinto de Oliveira, o Tebas, só foi reconhecido como arquiteto em 2018.</cite>
+      </div>
+    </section>
+
+    <section class="bloco" style="padding-top:0;border-top:0">
+      <div class="wrap">
+        <div class="numeros">
+          <div class="revelar"><strong data-contar="7">0</strong><span>grandes temas</span></div>
+          <div class="revelar atraso-1"><strong data-contar="50">0</strong><span>assuntos mapeados</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bloco" style="border-top:0;padding-top:20px">
+      <div class="wrap">
+        <div class="chamada revelar">
+          <div>
+            <div class="rotulo">Newsletter</div>
+            <h2>Receba as novidades da cidade de ideias.</h2>
+          </div>
+          <div>
+            <form onsubmit="event.preventDefault();this.querySelector('button').textContent='Em breve!';">
+              <input type="email" placeholder="seu@email.com" required aria-label="Seu e-mail">
+              <button class="btn btn-escuro" type="submit">Assinar</button>
+            </form>
+            <p class="nota">A newsletter está em preparação. Seja um tebas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TODOS OS TEMAS -->
+  <div class="pagina" id="pg-temas">
+    <section class="diretorio">
+      <div class="wrap">
+        <div class="trilha"><a href="#inicio">Início</a> / Temas</div>
+        <h1 class="revelar">Todos os temas</h1>
+        <p class="intro revelar atraso-1">Os sete diretórios do Tebas e os 50 assuntos que vão orientar as publicações.</p>
+        <div class="grade" id="gradeTemas2" style="margin-top:60px"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- DIRETÓRIO DE UM TEMA -->
+  <div class="pagina" id="pg-tema"><section class="diretorio"><div class="wrap" id="conteudoTema"></div></section></div>
+
+  <!-- POSTAGEM -->
+  <div class="pagina" id="pg-post"><section class="diretorio"><div class="wrap" id="conteudoPost"></div></section></div>
+
+  <!-- PORTFÓLIO -->
+  <div class="pagina" id="pg-portfolio">
+    <section class="diretorio">
+      <div class="wrap">
+        <div class="trilha"><a href="#inicio">Início</a> / Portfólio</div>
+        <h1 class="revelar">Portfólio</h1>
+        <p class="intro revelar atraso-1">Projetos desenvolvidos na faculdade e estudos pessoais sobre arquitetura, cidade e dados.</p>
+        <div class="cards-port" id="cardsPort"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- SOBRE -->
+  <div class="pagina" id="pg-sobre">
+    <section class="diretorio">
+      <div class="wrap">
+        <div class="trilha"><a href="#inicio">Início</a> / Sobre</div>
+        <h1 class="revelar">Quem faz o Tebas</h1>
+        <div class="sobre-grid">
+          <div class="foto revelar">
+            <!-- Para colocar sua foto, troque a linha abaixo por: <img src="imagens/foto.jpg" alt="Foto de Guilherme"> -->
+            Sua foto
+          </div>
+          <div class="sobre-texto">
+            <h2 class="revelar">Quem sou eu</h2>
+            <p class="revelar">Olá, eu sou o Guilherme. [Escreva aqui sua formação, faculdade, cidade e o que te move na arquitetura e no urbanismo.]</p>
+            <h2 class="revelar">Por que este site existe</h2>
+            <p class="revelar">O Tebas é um portal sobre arquitetura, urbanismo, dados, cidades inteligentes e sustentabilidade, feito para o público em geral e para arquitetos em formação ou que querem se atualizar.</p>
+            <p class="revelar">O nome homenageia Joaquim Pinto de Oliveira, o Tebas, construtor negro escravizado que ergueu obras fundamentais da São Paulo do século 18 e só foi reconhecido como arquiteto em 2018. Em tupi, “teba” quer dizer forte, hábil, desembaraçado.</p>
+            <div class="destaque revelar">Unir memória e tecnologia, mostrar o futuro das cidades e dar crédito a quem constrói.</div>
+            <h2 class="revelar">Contato</h2>
+            <div class="contatos revelar">
+              <a class="btn btn-escuro" href="mailto:contato@tebas.arq.br">Escreva para mim</a>
+              <a class="btn btn-linha" href="#" target="_blank" rel="noopener">Instagram</a>
+              <a class="btn btn-linha" href="#" target="_blank" rel="noopener">TikTok</a>
+              <a class="btn btn-linha" href="#" target="_blank" rel="noopener">YouTube</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="rodape-topo">
+      <div>
+        <div class="rodape-marca"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M10 19.5 H19.5 V10 Z"/></svg><span>tebas</span></div>
+        <p>O futuro das cidades, sem esquecer quem as construiu.</p>
+      </div>
+      <div><h4>Temas</h4><ul id="rodapeTemas"></ul></div>
+      <div>
+        <h4>Portal</h4>
+        <ul>
+          <li><a href="#inicio">Início</a></li>
+          <li><a href="#explorar" data-rolar="explorar">Cidade de ideias</a></li>
+          <li><a href="#temas">Todos os temas</a></li>
+          <li><a href="#portfolio">Portfólio</a></li>
+          <li><a href="#sobre">Sobre</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Redes</h4>
+        <ul>
+          <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="#" target="_blank" rel="noopener">TikTok</a></li>
+          <li><a href="#" target="_blank" rel="noopener">YouTube</a></li>
+          <li><a href="mailto:contato@tebas.arq.br">E-mail</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="rodape-gigante">tebas</div>
+    <div class="rodape-baixo"><span>© <span id="ano"></span> Tebas · tebas.arq.br</span></div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   DADOS DO SITE: edite aqui
+   - Para ligar um assunto a uma postagem pronta, preencha "link"
+     com o endereço do arquivo, por exemplo "posts/gemeos-digitais.html".
+   - Sem "link", o assunto abre uma página "Em preparação".
+   ========================================================= */
+const temas = [
+  {nome:"Cidades Inteligentes e Gêmeos Digitais", cor:"#5B7B8C", desc:"A cidade como sistema que se mede, se simula e se ajusta.",
+   assuntos:["Gêmeos digitais urbanos","Internet das Coisas no espaço público","Plataformas operacionais de cidade","Iluminação e redes inteligentes","Edifícios autônomos","Cidades responsivas e adaptativas","Gêmeo digital do Brasil","Cidades que aprendem"]},
+  {nome:"Dados, IA e Arquitetura Computacional", cor:"#8A7A9B", desc:"Programar, medir e projetar com algoritmos.",
+   assuntos:["Dados urbanos abertos","Programação para arquitetos","IA generativa no projeto","Análise espacial e geoprocessamento","Modelagem preditiva do crescimento urbano","Visualização de dados urbanos","Ciência cidadã urbana","O arquiteto aumentado"]},
+  {nome:"Clima, Sustentabilidade e Resiliência", cor:"#7D8B5A", desc:"Projetar para um planeta mais quente e instável.",
+   assuntos:["Ilhas de calor e conforto térmico","Drenagem e cidades-esponja","Infraestrutura verde","Edifícios de energia positiva","Economia circular na construção","Carbono incorporado","Cidades costeiras e elevação do mar","Migração climática e novas cidades"]},
+  {nome:"Construção do Futuro e Novos Materiais", cor:"#B8864E", desc:"Do cinzel do Tebas ao robô no canteiro.",
+   assuntos:["Impressão 3D de edificações","Construção modular e industrializada","Robótica no canteiro","Biomateriais","Saberes construtivos tradicionais","Fabricação digital e CNC","Arquitetura fora da Terra"]},
+  {nome:"Mobilidade e Infraestrutura", cor:"#C9A85C", desc:"Como as pessoas e as coisas vão circular.",
+   assuntos:["Mobilidade baseada em dados","Cidade de 15 minutos","Veículos autônomos","Logística urbana e entregas","Mobilidade aérea urbana","Infraestrutura subterrânea"]},
+  {nome:"Habitação de Interesse Social, Território e Justiça Urbana", cor:"#C2603F", desc:"Tecnologia para quem sempre ficou fora do mapa.",
+   assuntos:["HIS e tecnologia","Mapeamento de favelas e periferias","Urbanismo antirracista com dados","Urbanismo participativo digital","Acessibilidade urbana","Cidades para todas as idades","Locação social e retrofit"]},
+  {nome:"Memória, Patrimônio, Ética e Governança", cor:"#6B5444", desc:"Quem constrói, quem decide e quem é lembrado.",
+   assuntos:["Patrimônio histórico digital","Construtores apagados da história","Ética, vigilância e privacidade","Soberania de dados urbanos","Realidade virtual e aumentada","A cidade de 2076"]}
+];
+
+/* Postagens já publicadas: "Nome do assunto": "endereço do arquivo" */
+const postagensProntas = {
+  // "Gêmeos digitais urbanos": "posts/gemeos-digitais.html",
+};
+
+/* Ligações entre assuntos de temas diferentes */
+const conexoesExtras = [
+  ["Gêmeos digitais urbanos","Drenagem e cidades-esponja"],["Gêmeos digitais urbanos","Dados urbanos abertos"],
+  ["Dados urbanos abertos","Mapeamento de favelas e periferias"],["Ilhas de calor e conforto térmico","Infraestrutura verde"],
+  ["Ilhas de calor e conforto térmico","Urbanismo antirracista com dados"],["Saberes construtivos tradicionais","Construtores apagados da história"],
+  ["Patrimônio histórico digital","Realidade virtual e aumentada"],["Cidade de 15 minutos","HIS e tecnologia"],
+  ["Mobilidade baseada em dados","Análise espacial e geoprocessamento"],["Ética, vigilância e privacidade","Internet das Coisas no espaço público"],
+  ["Soberania de dados urbanos","Plataformas operacionais de cidade"],["Economia circular na construção","Biomateriais"],
+  ["Construção modular e industrializada","HIS e tecnologia"],["IA generativa no projeto","O arquiteto aumentado"],
+  ["Ciência cidadã urbana","Urbanismo participativo digital"],["Cidades costeiras e elevação do mar","Migração climática e novas cidades"],
+  ["Locação social e retrofit","Economia circular na construção"],["Mapeamento de favelas e periferias","Análise espacial e geoprocessamento"]
+];
+
+/* Trabalhos do portfólio. Coloque as imagens na pasta "imagens". */
+const trabalhos = [
+  {titulo:"Projeto 1", ano:"2024", tipo:"Ateliê de Projeto", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""},
+  {titulo:"Projeto 2", ano:"2025", tipo:"Urbanismo", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""},
+  {titulo:"Projeto 3", ano:"2025", tipo:"Dados e mapas", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""},
+  {titulo:"Projeto 4", ano:"2026", tipo:"Estudo pessoal", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""}
+];
+
+/* =========================================================
+   A partir daqui, o código que faz o site funcionar
+   ========================================================= */
+/* Ilustrações originais de cada tema (desenhadas em SVG, sem arquivos externos) */
+const K="#3B3631", P="#F7F1E6", F="#EFE7D8";
+const tr=(c,o)=>c+Math.round(o*255).toString(16).padStart(2,"0");
+const ilustracoes=[
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <path d="M115 72 Q200 8 285 72" fill="none" stroke="${K}" stroke-width="2" stroke-dasharray="5 6"/>
+  <circle cx="115" cy="72" r="6" fill="${P}" stroke="${K}" stroke-width="2"/><circle cx="285" cy="72" r="6" fill="${c}" stroke="${K}" stroke-width="2"/>
+  <rect x="48" y="112" width="40" height="78" fill="${c}" stroke="${K}" stroke-width="2"/>
+  <rect x="94" y="80" width="44" height="110" fill="${tr(c,.55)}" stroke="${K}" stroke-width="2"/>
+  <rect x="144" y="128" width="34" height="62" fill="${c}" stroke="${K}" stroke-width="2"/>
+  <g fill="${P}"><rect x="104" y="96" width="8" height="10"/><rect x="120" y="96" width="8" height="10"/><rect x="104" y="118" width="8" height="10"/><rect x="120" y="118" width="8" height="10"/><rect x="58" y="128" width="8" height="10"/><rect x="72" y="128" width="8" height="10"/></g>
+  <g fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="4 4"><rect x="218" y="112" width="40" height="78"/><rect x="264" y="80" width="44" height="110"/><rect x="314" y="128" width="34" height="62"/>
+  <path d="M218 151 H258 M264 117 H308 M264 153 H308 M314 159 H348 M238 112 V190 M286 80 V190"/></g>
+  <line x1="30" y1="190" x2="370" y2="190" stroke="${K}" stroke-width="2" stroke-linecap="round"/>`,
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <circle cx="200" cy="118" r="74" fill="${tr(c,.85)}"/>
+  <g fill="${K}" opacity=".28">${Array.from({length:60},(_,i)=>`<circle cx="${40+(i%12)*29}" cy="${40+Math.floor(i/12)*40}" r="2.2"/>`).join("")}</g>
+  <path d="M40 186 L98 150 L150 168 L206 98 L258 122 L330 56" fill="none" stroke="${K}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <g fill="${P}" stroke="${K}" stroke-width="2"><circle cx="98" cy="150" r="6"/><circle cx="150" cy="168" r="6"/><circle cx="206" cy="98" r="7"/><circle cx="258" cy="122" r="6"/></g>
+  <circle cx="330" cy="56" r="9" fill="${c}" stroke="${K}" stroke-width="2"/>
+  <path d="M188 210 h24 M200 198 v24" stroke="${K}" stroke-width="2" stroke-linecap="round"/>`,
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <circle cx="300" cy="72" r="34" fill="#D9A441" stroke="${K}" stroke-width="2"/>
+  <g stroke="${K}" stroke-width="2" stroke-linecap="round"><path d="M300 22v-10M346 72h10M300 122v10M254 72h-10M333 39l7-7M267 39l-7-7"/></g>
+  <path d="M0 182 Q50 166 100 182 T200 182 T300 182 T400 182 V240 H0Z" fill="${tr("#5B7B8C",.35)}"/>
+  <g fill="none" stroke="${K}" stroke-width="2" stroke-linecap="round"><path d="M0 182 Q50 166 100 182 T200 182 T300 182 T400 182"/><path d="M20 206 Q70 192 120 206 T220 206 T320 206" opacity=".6"/></g>
+  <line x1="112" y1="176" x2="112" y2="112" stroke="${K}" stroke-width="3" stroke-linecap="round"/>
+  <path d="M112 132 L92 112 M112 146 L134 124" stroke="${K}" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="112" cy="90" rx="40" ry="36" fill="${c}" stroke="${K}" stroke-width="2"/>
+  <ellipse cx="190" cy="150" rx="22" ry="20" fill="${tr(c,.6)}" stroke="${K}" stroke-width="2"/><line x1="190" y1="170" x2="190" y2="180" stroke="${K}" stroke-width="2"/>`,
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <g stroke="${K}" stroke-width="2">
+   <rect x="60" y="160" width="46" height="30" fill="${c}"/><rect x="106" y="160" width="46" height="30" fill="${tr(c,.55)}"/><rect x="152" y="160" width="46" height="30" fill="${c}"/><rect x="198" y="160" width="46" height="30" fill="${tr(c,.55)}"/>
+   <rect x="60" y="130" width="34" height="30" fill="${tr(c,.55)}"/><rect x="60" y="100" width="34" height="30" fill="${c}"/>
+   <rect x="210" y="130" width="34" height="30" fill="${c}"/><rect x="210" y="100" width="34" height="30" fill="${tr(c,.55)}"/>
+   <path d="M60 100 Q152 20 244 100 L210 100 Q152 50 94 100 Z" fill="${c}"/>
+  </g>
+  <line x1="30" y1="190" x2="370" y2="190" stroke="${K}" stroke-width="2" stroke-linecap="round"/>
+  <g fill="none" stroke="${K}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M332 190 V140 L300 98 L262 104"/></g>
+  <rect x="316" y="178" width="32" height="12" fill="${K}"/>
+  <g fill="${P}" stroke="${K}" stroke-width="2"><circle cx="332" cy="140" r="7"/><circle cx="300" cy="98" r="7"/></g>
+  <path d="M262 104 l-10 -6 M262 104 l-8 9" stroke="${K}" stroke-width="2" stroke-linecap="round"/>`,
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <path d="M-10 178 C90 118 190 230 410 132" fill="none" stroke="${c}" stroke-width="26" stroke-linecap="round"/>
+  <path d="M-10 178 C90 118 190 230 410 132" fill="none" stroke="${P}" stroke-width="2" stroke-dasharray="10 10"/>
+  <path d="M70 -10 C120 70 150 150 240 250" fill="none" stroke="${K}" stroke-width="2"/>
+  <path d="M260 -10 C250 60 300 90 410 70" fill="none" stroke="${K}" stroke-width="2" stroke-dasharray="3 6"/>
+  <g fill="${P}" stroke="${K}" stroke-width="2"><circle cx="102" cy="40" r="7"/><circle cx="136" cy="110" r="7"/><circle cx="196" cy="196" r="7"/><circle cx="268" cy="62" r="6"/><circle cx="350" cy="74" r="6"/></g>
+  <g transform="translate(250 128) rotate(-16)"><rect x="-26" y="-12" width="52" height="24" rx="6" fill="${K}"/><rect x="-18" y="-6" width="10" height="8" fill="${P}"/><rect x="-4" y="-6" width="10" height="8" fill="${P}"/><rect x="10" y="-6" width="10" height="8" fill="${P}"/></g>`,
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <circle cx="330" cy="58" r="22" fill="#D9A441" stroke="${K}" stroke-width="2"/>
+  <g stroke="${K}" stroke-width="2" stroke-linejoin="round">
+   <path d="M48 190 V128 L82 98 L116 128 V190Z" fill="${c}"/>
+   <path d="M116 190 V108 L158 72 L200 108 V190Z" fill="${P}"/>
+   <path d="M200 190 V136 L232 108 L264 136 V190Z" fill="${tr(c,.55)}"/>
+   <path d="M264 190 V118 L302 86 L340 118 V190Z" fill="${c}"/>
+  </g>
+  <g fill="${P}" stroke="${K}" stroke-width="1.5"><rect x="72" y="140" width="20" height="18"/><rect x="284" y="128" width="16" height="16"/><rect x="306" y="128" width="16" height="16"/><rect x="222" y="160" width="20" height="30"/></g>
+  <g fill="${c}" stroke="${K}" stroke-width="1.5"><rect x="136" y="118" width="16" height="16"/><rect x="164" y="118" width="16" height="16"/><rect x="136" y="146" width="16" height="16"/><rect x="164" y="146" width="16" height="16"/></g>
+  <line x1="30" y1="190" x2="370" y2="190" stroke="${K}" stroke-width="2" stroke-linecap="round"/>
+  <path d="M150 214 Q200 200 250 214" fill="none" stroke="${K}" stroke-width="2" stroke-linecap="round"/>`,
+ c=>`<rect class="fundo" width="400" height="240" fill="${F}"/>
+  <g stroke="${tr(c,.75)}" stroke-width="1.5" stroke-dasharray="4 5" fill="none"><path d="M352 46 L130 92 M352 46 L270 92 M352 46 L130 190 M352 46 L270 190 M352 46 L200 56"/></g>
+  <g stroke="${K}" stroke-width="2" stroke-linejoin="round">
+   <rect x="130" y="92" width="140" height="98" fill="${P}"/>
+   <path d="M122 92 Q200 30 278 92Z" fill="${tr(c,.5)}"/>
+   <rect x="186" y="36" width="28" height="30" fill="${P}"/><path d="M186 36 L200 18 L214 36Z" fill="${c}"/>
+   <path d="M180 190 V146 Q200 120 220 146 V190Z" fill="${c}"/>
+   <circle cx="155" cy="128" r="10" fill="${tr(c,.4)}"/><circle cx="245" cy="128" r="10" fill="${tr(c,.4)}"/>
+  </g>
+  <line x1="40" y1="190" x2="360" y2="190" stroke="${K}" stroke-width="2" stroke-linecap="round"/>
+  <rect x="340" y="34" width="24" height="24" rx="4" fill="${K}"/><circle cx="352" cy="46" r="5" fill="${c}"/>
+  <path d="M60 214 h60 M280 214 h60" stroke="${K}" stroke-width="2" stroke-linecap="round" opacity=".5"/>`
+];
+
+const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+temas.forEach((t,i)=>{ t.id = slug(t.nome); t.n = i+1; const d = ilustracoes[i](t.cor); t.arte = `<svg class="desenho" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustração do tema ${t.nome}"><rect width="400" height="240" fill="${F}" filter="url(#papel)"/><g class="cor" filter="url(#lapis)">${d}</g><g class="hachura" filter="url(#lapis2)">${d}</g><g class="traco" filter="url(#lapis2)" transform="translate(1.3 -0.9)">${d}</g></svg>`; });
+const temaDoAssunto = {};
+temas.forEach(t=>t.assuntos.forEach(a=>temaDoAssunto[a]=t));
+const linkTema = t => "#tema/"+t.id;
+const linkPost = a => postagensProntas[a] || "#post/"+slug(a);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+document.getElementById("ano").textContent = new Date().getFullYear();
+
+/* Cards de temas */
+function cardTema(t,i){
+  return `<a href="${linkTema(t)}" class="card revelar atraso-${i%3+1}">
+    <div class="arte">${t.arte}</div>
+    <span class="num">${String(t.n).padStart(2,"0")}</span>
+    <h3>${esc(t.nome)}</h3><p>${esc(t.desc)}</p>
+    <div class="rodape-card"><span>${t.assuntos.length} assuntos</span><span class="seta">→</span></div></a>`;
+}
+document.getElementById("gradeTemas").innerHTML = temas.map(cardTema).join("");
+document.getElementById("gradeTemas2").innerHTML = temas.map(cardTema).join("");
+document.getElementById("rodapeTemas").innerHTML = temas.map(t=>`<li><a href="${linkTema(t)}">${esc(t.nome.split(",")[0])}</a></li>`).join("");
+
+/* Portfólio */
+document.getElementById("cardsPort").innerHTML = trabalhos.map((t,i)=>`
+  <article class="trabalho revelar atraso-${i%2+1}">
+    <div class="imagem">${t.imagem?`<img src="${esc(t.imagem)}" alt="${esc(t.titulo)}" loading="lazy">`:"Imagem do projeto"}</div>
+    <div class="meta">${esc(t.tipo)} · ${esc(t.ano)}</div>
+    <h3>${esc(t.titulo)}</h3><p>${esc(t.desc)}</p>
+  </article>`).join("");
+
+/* Páginas de diretório e postagem */
+function vizinhosDoAssunto(a){
+  const v=new Set();
+  conexoesExtras.forEach(([x,y])=>{ if(x===a) v.add(y); if(y===a) v.add(x); });
+  return [...v];
+}
+function renderTema(id){
+  const t = temas.find(x=>x.id===id);
+  if(!t) return false;
+  document.getElementById("conteudoTema").innerHTML = `
+    <div class="trilha"><a href="#inicio">Início</a> / <a href="#temas">Temas</a> / ${esc(t.nome.split(",")[0])}</div>
+    <div class="faixa revelar" style="background:${t.cor}"></div>
+    <h1 class="revelar">${esc(t.nome)}</h1>
+    <p class="intro revelar atraso-1">${esc(t.desc)}</p>
+    <div class="arte-grande revelar atraso-2">${t.arte}</div>
+    <div class="lista">${t.assuntos.map((a,i)=>{
+      const pronto = !!postagensProntas[a];
+      return `<a class="item-lista revelar" href="${linkPost(a)}">
+        <span class="n">${String(i+1).padStart(2,"0")}</span>
+        <div><h3>${esc(a)}</h3><p>${vizinhosDoAssunto(a).length? "Conecta com: "+vizinhosDoAssunto(a).map(esc).join(", ") : "Assunto do diretório "+esc(t.nome.split(",")[0])}</p></div>
+        <span class="selo ${pronto?"pronto":""}">${pronto?"Ler artigo →":"Em preparação"}</span></a>`;}).join("")}</div>`;
+  return true;
+}
+function renderPost(s){
+  const a = Object.keys(temaDoAssunto).find(x=>slug(x)===s);
+  if(!a) return false;
+  const t = temaDoAssunto[a];
+  const rel = [...vizinhosDoAssunto(a), ...t.assuntos.filter(x=>x!==a)].slice(0,6);
+  document.getElementById("conteudoPost").innerHTML = `
+    <div class="trilha"><a href="#inicio">Início</a> / <a href="${linkTema(t)}">${esc(t.nome.split(",")[0])}</a> / Postagem</div>
+    <div class="faixa revelar" style="background:${t.cor}"></div>
+    <h1 class="revelar">${esc(a)}</h1>
+    <div class="post-corpo">
+      <div class="aviso revelar">Este artigo está em preparação. Em breve, aqui você vai encontrar uma reportagem completa, com dados, referências e vídeos sobre o assunto.</div>
+      <p class="revelar">Este assunto faz parte do tema <a href="${linkTema(t)}" style="color:var(--accent)">${esc(t.nome)}</a>: ${esc(t.desc.charAt(0).toLowerCase()+t.desc.slice(1))}</p>
+      <div class="relacionados revelar">
+        <h2>Na cidade de ideias, ele se conecta com</h2>
+        <div class="lista" style="margin-top:0">${rel.map(r=>`<a class="item-lista" href="${linkPost(r)}"><span class="n" style="width:12px;height:12px;border-radius:50%;background:${temaDoAssunto[r].cor}"></span><div><h3 style="font-size:20px">${esc(r)}</h3><p>${esc(temaDoAssunto[r].nome)}</p></div><span class="seta">→</span></a>`).join("")}</div>
+      </div>
+      <p style="margin-top:40px"><a class="btn btn-linha" href="${linkTema(t)}">Voltar ao diretório <span class="seta">→</span></a></p>
+    </div>`;
+  return true;
+}
+
+/* Navegação entre páginas */
+function mostrar(){
+  const h = (location.hash||"#inicio").slice(1);
+  let pagina = "inicio";
+  if(h.startsWith("tema/")) pagina = renderTema(h.slice(5)) ? "tema" : "temas";
+  else if(h.startsWith("post/")) pagina = renderPost(h.slice(5)) ? "post" : "temas";
+  else if(["inicio","temas","portfolio","sobre"].includes(h)) pagina = h;
+  else if(h==="explorar"){ pagina="inicio"; }
+  document.querySelectorAll(".pagina").forEach(p=>p.classList.toggle("visivel",p.id==="pg-"+pagina));
+  const ativo = (pagina==="tema"||pagina==="post") ? "temas" : pagina;
+  document.querySelectorAll("nav.principal a").forEach(a=>a.classList.toggle("ativo",a.dataset.pagina===ativo));
+  document.getElementById("menu").classList.remove("aberto");
+  if(h==="explorar"){ setTimeout(()=>document.getElementById("explorar").scrollIntoView({behavior:"smooth"}),50); }
+  else window.scrollTo(0,0);
+  if(pagina==="inicio") iniciarGrafo();
+  observarRevelar();
+}
+window.addEventListener("hashchange",mostrar);
+document.getElementById("botaoMenu").addEventListener("click",()=>document.getElementById("menu").classList.toggle("aberto"));
+
+/* Animações ao rolar */
+let observador;
+function observarRevelar(){
+  if(!observador){
+    observador = new IntersectionObserver(es=>es.forEach(e=>{
+      if(e.isIntersecting){ const el=e.target; el.classList.add("visto"); observador.unobserve(el); setTimeout(()=>el.classList.add("fim"),1300);
+        e.target.querySelectorAll("[data-contar]").forEach(contar); }
+    }),{threshold:.15,rootMargin:"0px 0px -40px 0px"});
+  }
+  document.querySelectorAll(".pagina.visivel .revelar:not(.visto)").forEach(el=>observador.observe(el));
+}
+function contar(el){
+  const alvo=+el.dataset.contar, ini=performance.now(), dur=1400;
+  (function passo(t){ const p=Math.min((t-ini)/dur,1); el.textContent=Math.round(alvo*(1-Math.pow(1-p,3))); if(p<1) requestAnimationFrame(passo); })(ini);
+}
+window.addEventListener("scroll",()=>{
+  const d=document.documentElement, max=d.scrollHeight-d.clientHeight;
+  document.getElementById("progresso").style.width=(max>0? d.scrollTop/max*100 : 0)+"%";
+  document.getElementById("cabecalho").classList.toggle("rolado", d.scrollTop>20);
+},{passive:true});
+
+/* Nuvem de pontos */
+let grafoPronto=false;
+function iniciarGrafo(){
+  if(grafoPronto || typeof d3==="undefined") return;
+  const caixa=document.getElementById("grafo");
+  const largura=caixa.clientWidth, altura=caixa.clientHeight;
+  if(!largura) return;
+  grafoPronto=true;
+
+  const nos=[], links=[];
+  temas.forEach(t=>{
+    nos.push({id:t.id, nome:t.nome, tipo:"tema", cor:t.cor, tema:t});
+    t.assuntos.forEach(a=>{ nos.push({id:a, nome:a, tipo:"assunto", cor:t.cor, tema:t}); links.push({source:t.id,target:a}); });
+  });
+  conexoesExtras.forEach(([a,b])=>links.push({source:a,target:b,extra:true}));
+
+  const svg=d3.select("#grafo").append("svg").attr("viewBox",[0,0,largura,altura]);
+  const g=svg.append("g");
+  const zoom=d3.zoom().scaleExtent([.3,4]).on("zoom",e=>g.attr("transform",e.transform));
+  svg.call(zoom);
+
+  const pequeno = largura<600;
+  const sim=d3.forceSimulation(nos)
+    .force("link",d3.forceLink(links).id(d=>d.id).distance(d=>d.extra?(pequeno?110:150):(pequeno?44:62)))
+    .force("charge",d3.forceManyBody().strength(d=>d.tipo==="tema"?(pequeno?-300:-520):(pequeno?-60:-95)))
+    .force("center",d3.forceCenter(largura/2,altura/2))
+    .force("x",d3.forceX(largura/2).strength(.04)).force("y",d3.forceY(altura/2).strength(.06))
+    .force("colisao",d3.forceCollide().radius(d=>d.tipo==="tema"?40:15))
+    .velocityDecay(.32);
+
+  const raioBase=d=>d.tipo==="tema"?(pequeno?20:25):(pequeno?8:10);
+  const semMovimento=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const alcance=pequeno?70:120;
+  let mouse=null;
+  nos.forEach((n,i)=>{ n.fase=Math.random()*Math.PI*2; n.k=0; n.ordem=i; });
+
+  /* A nuvem respira: cada ponto flutua devagar e é levemente atraído pelo mouse */
+  function flutuar(){
+    let lista;
+    function forca(){
+      if(semMovimento) return;
+      const t=performance.now()/1000;
+      for(const n of lista){
+        const amp=n.tipo==="tema"?.035:.07;
+        n.vx+=Math.sin(t*.55+n.fase)*amp;
+        n.vy+=Math.cos(t*.45+n.fase*1.3)*amp;
+        if(mouse){
+          const dx=mouse[0]-n.x, dy=mouse[1]-n.y, dist=Math.hypot(dx,dy);
+          if(dist<alcance && dist>1){ const s=(1-dist/alcance)*.012; n.vx+=dx*s; n.vy+=dy*s; }
+        }
+      }
+    }
+    forca.initialize=n=>lista=n;
+    return forca;
+  }
+  sim.force("flutuar",flutuar()).alphaTarget(semMovimento?0:.025);
+
+  /* Linhas com traço de lápis: uma camada principal e um repasse mais leve */
+  const camadaLinhas=g.append("g").attr("filter","url(#lapis)");
+  const linha=camadaLinhas.selectAll("line").data(links).join("line")
+    .attr("stroke",d=>d.extra?"#B0573A":"#8F877A").attr("stroke-opacity",d=>d.extra?.6:.75)
+    .attr("stroke-width",d=>d.extra?1.3:1.6).attr("stroke-dasharray",d=>d.extra?"4,5":null).attr("stroke-linecap","round");
+  const linha2=g.append("g").attr("filter","url(#lapis2)").attr("opacity",.45).attr("transform","translate(1.2 -0.8)")
+    .selectAll("line").data(links).join("line")
+    .attr("stroke","#3B3631").attr("stroke-opacity",d=>d.extra?.35:.4).attr("stroke-width",.9).attr("stroke-dasharray",d=>d.extra?"4,5":null);
+
+  /* Bolinhas desenhadas a lápis: cor granulada, hachura e contorno repassado */
+  const camadaPontos=g.append("g").attr("filter","url(#lapis)");
+  const ponto=camadaPontos.selectAll("circle").data(nos).join("circle")
+    .attr("r",0).attr("fill",d=>d.cor).attr("fill-opacity",.6).attr("stroke","#3B3631").attr("stroke-opacity",.85)
+    .attr("stroke-width",d=>d.tipo==="tema"?2:1.4).style("cursor","pointer")
+    .call(d3.drag()
+      .on("start",(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on("drag",(e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on("end",(e,d)=>{if(!e.active)sim.alphaTarget(semMovimento?0:.025);d.fx=null;d.fy=null;}));
+  const hach=g.append("g").attr("filter","url(#lapis2)").style("pointer-events","none").style("mix-blend-mode","multiply").attr("opacity",.3)
+    .selectAll("circle").data(nos).join("circle").attr("r",0).attr("fill","url(#hachura)");
+  const contorno=g.append("g").attr("filter","url(#lapis2)").style("pointer-events","none").attr("opacity",.5).attr("transform","translate(1.3 -1)")
+    .selectAll("circle").data(nos).join("circle").attr("r",0).attr("fill","none").attr("stroke","#3B3631").attr("stroke-width",1);
+  /* Bolinhas que crescem e ganham cor quando o mouse se aproxima (suavizado a cada quadro) */
+  const inicio=performance.now();
+  svg.on("mousemove.prox",e=>{ mouse=d3.zoomTransform(svg.node()).invert(d3.pointer(e,svg.node())); sim.alpha(Math.max(sim.alpha(),.06)); });
+  svg.on("mouseleave.prox",()=>{ mouse=null; });
+  function raioAtual(d){
+    const alvo = mouse ? (()=>{const dist=Math.hypot(d.x-mouse[0],d.y-mouse[1]);return dist<alcance?Math.pow(1-dist/alcance,1.6):0;})() : 0;
+    d.k += (alvo-d.k)*.18;
+    const e = Math.min(Math.max((performance.now()-inicio-d.ordem*18)/600,0),1);
+    const entrada = 1-Math.pow(1-e,3);
+    return raioBase(d)*entrada*(1+.75*d.k);
+  }
+
+  /* Pausa a animação quando a nuvem sai da tela, para poupar bateria */
+  new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting) sim.restart(); else sim.stop(); })).observe(caixa);
+  document.addEventListener("visibilitychange",()=>{ document.hidden ? sim.stop() : sim.restart(); });
+
+  const rotulo=g.append("g").selectAll("text").data(nos.filter(d=>d.tipo==="tema")).join("text")
+    .text(d=>d.nome.split(",")[0]).attr("fill","#1A1916").attr("font-size",12)
+    .attr("font-family","Helvetica Neue, Helvetica, Arial, sans-serif").attr("font-weight",500).attr("text-anchor","middle").attr("dy",d=>raioBase(d)+18)
+    .style("pointer-events","none").style("paint-order","stroke").attr("stroke","#FAF7F1").attr("stroke-width",4);
+
+  const tip=document.getElementById("tooltip");
+  ponto.on("mouseover",(e,d)=>{tip.style.opacity=1;tip.textContent=d.nome;})
+    .on("mousemove",e=>{const r=caixa.getBoundingClientRect();tip.style.left=(e.clientX-r.left+14)+"px";tip.style.top=(e.clientY-r.top+14)+"px";})
+    .on("mouseout",()=>tip.style.opacity=0)
+    .on("click",(e,d)=>selecionar(d))
+    .on("dblclick",(e,d)=>{ location.hash = d.tipo==="tema" ? linkTema(d.tema) : linkPost(d.id); });
+
+  function vizinhos(id){const s=new Set([id]);links.forEach(l=>{if(l.source.id===id)s.add(l.target.id);if(l.target.id===id)s.add(l.source.id);});return s;}
+  const painel=document.getElementById("painel");
+  function selecionar(d){
+    const v=vizinhos(d.id);
+    ponto.transition().duration(250).attr("opacity",n=>v.has(n.id)?1:.15);
+    hach.transition().duration(250).attr("opacity",n=>v.has(n.id)?1:.15);
+    contorno.transition().duration(250).attr("opacity",n=>v.has(n.id)?1:.15);
+    linha.transition().duration(250).attr("opacity",l=>(l.source.id===d.id||l.target.id===d.id)?1:.08);
+    linha2.transition().duration(250).attr("opacity",l=>(l.source.id===d.id||l.target.id===d.id)?1:.08);
+    rotulo.transition().duration(250).attr("opacity",n=>v.has(n.id)?1:.25);
+    const outros=[...v].filter(x=>x!==d.id);
+    const nomeDe=id=>{const n=nos.find(x=>x.id===id);return n?n.nome:id;};
+    if(d.tipo==="tema"){
+      painel.innerHTML=`<div class="arte-mini">${d.tema.arte}</div><div class="rotulo" style="color:${d.cor}">Tema ${String(d.tema.n).padStart(2,"0")}</div>
+        <h3>${esc(d.nome)}</h3><p>${esc(d.tema.desc)}</p>
+        <div class="conexoes">${outros.map(o=>`<button class="chip" data-id="${esc(o)}">${esc(nomeDe(o))}</button>`).join("")}</div>
+        <div class="acoes"><a class="btn btn-escuro" href="${linkTema(d.tema)}">Abrir diretório <span class="seta">→</span></a>
+        <button class="btn btn-linha" id="limpar">Ver tudo</button></div>`;
+    } else {
+      const pronto=!!postagensProntas[d.id];
+      painel.innerHTML=`<div class="rotulo" style="color:${d.cor}">${esc(d.tema.nome.split(",")[0])}</div>
+        <h3>${esc(d.nome)}</h3><p>${pronto?"Artigo publicado.":"Postagem em preparação."} Conecta com ${outros.length} ${outros.length===1?"ponto":"pontos"} da cidade de ideias.</p>
+        <div class="conexoes">${outros.map(o=>`<button class="chip" data-id="${esc(o)}">${esc(nomeDe(o))}</button>`).join("")}</div>
+        <div class="acoes"><a class="btn btn-escuro" href="${linkPost(d.id)}">${pronto?"Ler artigo":"Ver postagem"} <span class="seta">→</span></a>
+        <a class="btn btn-linha" href="${linkTema(d.tema)}">Diretório do tema</a></div>`;
+    }
+    painel.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{const n=nos.find(x=>x.id===c.dataset.id); if(n) selecionar(n);}));
+    const l=document.getElementById("limpar"); if(l) l.addEventListener("click",limpar);
+  }
+  function limpar(){ [ponto,hach,contorno,linha,linha2,rotulo].forEach(x=>x.transition().attr("opacity",1)); }
+
+  /* Legenda com filtro */
+  const ocultos=new Set();
+  const leg=document.getElementById("legenda");
+  leg.innerHTML=temas.map(t=>`<button data-tema="${t.id}"><i style="background:${t.cor}"></i>${esc(t.nome.split(",")[0])}</button>`).join("");
+  leg.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    const id=b.dataset.tema; ocultos.has(id)?ocultos.delete(id):ocultos.add(id); b.classList.toggle("off");
+    [ponto,hach,contorno].forEach(x=>x.style("display",n=>ocultos.has(n.tema.id)?"none":null));
+    linha2.style("display",l=>(ocultos.has(l.source.tema.id)||ocultos.has(l.target.tema.id))?"none":null);
+    rotulo.style("display",n=>ocultos.has(n.tema.id)?"none":null);
+    linha.style("display",l=>(ocultos.has(l.source.tema.id)||ocultos.has(l.target.tema.id))?"none":null);
+  }));
+
+  /* Enquadra a nuvem inteira na tela quando ela se acomoda */
+  let enquadrado=false;
+  function enquadrar(){
+    if(enquadrado) return; enquadrado=true;
+    const xs=nos.map(n=>n.x), ys=nos.map(n=>n.y), m=40;
+    const x0=Math.min(...xs)-m, x1=Math.max(...xs)+m, y0=Math.min(...ys)-m, y1=Math.max(...ys)+m;
+    const k=Math.min(1.2, largura/(x1-x0), altura/(y1-y0));
+    const t=d3.zoomIdentity.translate(largura/2,altura/2).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2);
+    svg.transition().duration(900).call(zoom.transform,t);
+  }
+  setTimeout(enquadrar,1800);
+  sim.on("tick",()=>{
+    linha.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y).attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+    linha2.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y).attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+    nos.forEach(d=>{ d.r=raioAtual(d); });
+    ponto.attr("cx",d=>d.x).attr("cy",d=>d.y).attr("r",d=>d.r).attr("fill-opacity",d=>.6+.4*d.k);
+    hach.attr("cx",d=>d.x).attr("cy",d=>d.y).attr("r",d=>d.r);
+    contorno.attr("cx",d=>d.x).attr("cy",d=>d.y).attr("r",d=>d.r);
+    rotulo.attr("x",d=>d.x).attr("y",d=>d.y).attr("dy",d=>d.r+16);
+  });
+}
+
+/* Rolagem suave para a nuvem a partir de botões */
+document.querySelectorAll("[data-rolar]").forEach(a=>a.addEventListener("click",e=>{
+  if((location.hash||"#inicio")==="#inicio"||location.hash==="#explorar"){
+    e.preventDefault(); document.getElementById(a.dataset.rolar).scrollIntoView({behavior:"smooth"});
+  }
+}));
+
+mostrar();
+</script>
+</body>
+</html>
