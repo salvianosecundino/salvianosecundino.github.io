@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tebas · Arquitetura, dados e memória</title>
+<meta name="description" content="Tebas: o futuro das cidades sem esquecer quem as construiu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  :root{
+    --creme:#F5F0E8; --creme-2:#EDE6DA; --papel:#FBF8F3;
+    --tinta:#1F1E1B; --suave:#6B6560; --borda:#E3DCD0;
+    --terracota:#C96442;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--creme);color:var(--tinta);line-height:1.65;font-size:17px;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;font-weight:500;letter-spacing:-.01em}
+  header{max-width:1180px;margin:0 auto;padding:1.6rem 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+  .logo{font-family:"Source Serif 4",serif;font-size:1.5rem;font-weight:600;color:var(--tinta);text-decoration:none}
+  .logo span{color:var(--terracota)}
+  nav a{color:var(--suave);text-decoration:none;margin-left:2rem;font-size:.95rem;transition:color .2s}
+  nav a:hover,nav a.ativo{color:var(--tinta)}
+  nav a.ativo{border-bottom:1.5px solid var(--terracota);padding-bottom:2px}
+  main{max-width:1180px;margin:0 auto;padding:2rem 2rem 4rem}
+  .pagina{display:none;animation:surgir .4s ease}
+  .pagina.visivel{display:block}
+  @keyframes surgir{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .kicker{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--terracota);margin-bottom:1rem;font-weight:500}
+  h1{font-size:clamp(2.4rem,5vw,4rem);line-height:1.1;max-width:900px;margin-bottom:1.5rem}
+  h2{font-size:1.7rem;margin:2.5rem 0 .8rem}
+  h3{font-size:1.3rem;margin-bottom:.4rem}
+  .intro{max-width:680px;color:var(--suave);font-size:1.1rem;margin-bottom:2.5rem}
+  #grafo{background:var(--papel);border:1px solid var(--borda);border-radius:20px;width:100%;height:640px;position:relative;overflow:hidden}
+  #grafo svg{width:100%;height:100%}
+  .legenda{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.2rem}
+  .legenda button{border:1px solid var(--borda);background:var(--papel);color:var(--tinta);padding:.45rem .9rem;border-radius:999px;cursor:pointer;font-family:inherit;font-size:.85rem;display:flex;align-items:center;gap:.5rem}
+  .legenda button.apagado{opacity:.4}
+  .bolinha{width:10px;height:10px;border-radius:50%;display:inline-block}
+  #painel{background:var(--papel);border:1px solid var(--borda);padding:1.5rem 1.8rem;margin-top:1.2rem;border-radius:16px;min-height:90px}
+  #painel p{color:var(--suave)}
+  #painel strong{color:var(--tinta);font-weight:500}
+  .tooltip{position:absolute;pointer-events:none;background:var(--tinta);color:var(--creme);padding:.35rem .7rem;border-radius:8px;font-size:.8rem;opacity:0;transition:opacity .15s}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.8rem}
+  .card{background:var(--papel);border:1px solid var(--borda);border-radius:18px;overflow:hidden;transition:transform .25s,box-shadow .25s}
+  .card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(60,45,30,.08)}
+  .card .imagem{height:200px;background:var(--creme-2);display:flex;align-items:center;justify-content:center;color:var(--suave);font-size:.85rem}
+  .card .imagem img{width:100%;height:100%;object-fit:cover}
+  .card .texto{padding:1.4rem 1.5rem 1.6rem}
+  .card .tag{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--terracota);margin-bottom:.5rem}
+  .card p{color:var(--suave);font-size:.95rem}
+  .sobre{display:grid;grid-template-columns:260px 1fr;gap:4rem;align-items:start}
+  .foto{width:260px;height:320px;background:var(--creme-2);border-radius:18px;display:flex;align-items:center;justify-content:center;color:var(--suave);overflow:hidden}
+  .foto img{width:100%;height:100%;object-fit:cover}
+  .sobre p{color:#3D3A35;margin-bottom:1rem;max-width:680px}
+  .destaque{background:var(--creme-2);padding:1.8rem 2rem;border-radius:16px;margin:2rem 0;max-width:680px}
+  .destaque p{font-family:"Source Serif 4",serif;font-size:1.3rem;line-height:1.45;color:var(--tinta);margin:0}
+  .botao{display:inline-block;background:var(--tinta);color:var(--creme);padding:.7rem 1.4rem;border-radius:999px;text-decoration:none;font-size:.95rem;margin:.4rem .6rem 0 0;transition:background .2s}
+  .botao:hover{background:var(--terracota)}
+  .botao.claro{background:transparent;color:var(--tinta);border:1px solid var(--borda)}
+  footer{border-top:1px solid var(--borda);max-width:1180px;margin:0 auto;padding:2rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;color:var(--suave);font-size:.85rem}
+  @media(max-width:760px){.sobre{grid-template-columns:1fr;gap:2rem}.foto{width:100%;height:280px}nav a{margin-left:1.2rem}#grafo{height:480px}}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#inicio" class="logo">Tebas<span>.</span></a>
+  <nav>
+    <a href="#inicio" data-pagina="inicio">Início</a>
+    <a href="#portfolio" data-pagina="portfolio">Portfólio</a>
+    <a href="#sobre" data-pagina="sobre">Sobre</a>
+  </nav>
+</header>
+
+<main>
+  <section id="inicio" class="pagina">
+    <p class="kicker">Uma cidade de ideias</p>
+    <h1>O futuro das cidades, sem esquecer quem as construiu.</h1>
+    <p class="intro">Cada ponto é um assunto, e os maiores são os sete grandes temas. Arraste, aproxime e clique para ver como as ideias se conectam, como as ruas de uma cidade.</p>
+    <div class="legenda" id="legenda"></div>
+    <div id="grafo"><div class="tooltip" id="tooltip"></div></div>
+    <div id="painel"><h3>Escolha um ponto</h3><p>Clique em um tema ou assunto para ver suas conexões.</p></div>
+  </section>
+
+  <section id="portfolio" class="pagina">
+    <p class="kicker">Trabalhos</p>
+    <h1>Portfólio</h1>
+    <p class="intro">Projetos desenvolvidos na faculdade e estudos pessoais sobre arquitetura, cidade e dados.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="sobre" class="pagina">
+    <p class="kicker">Quem faz o Tebas</p>
+    <h1>Sobre</h1>
+    <div class="sobre">
+      <div class="foto"><!-- Troque por: <img src="imagens/foto.jpg" alt="Guilherme"> -->Sua foto</div>
+      <div>
+        <h2 style="margin-top:0">Quem sou eu</h2>
+        <p>Olá, eu sou o Guilherme. [Escreva aqui sua formação, faculdade, cidade e o que te move na arquitetura e no urbanismo.]</p>
+        <h2>Por que este site existe</h2>
+        <p>O Tebas é um portal sobre arquitetura, urbanismo, dados, cidades inteligentes e sustentabilidade, feito para o público em geral e para arquitetos em formação ou que querem se atualizar.</p>
+        <p>O nome homenageia Joaquim Pinto de Oliveira, o Tebas, construtor negro escravizado que ergueu obras fundamentais da São Paulo do século 18 e só foi reconhecido como arquiteto em 2018. Em tupi, "teba" quer dizer forte, hábil, desembaraçado.</p>
+        <div class="destaque"><p>Unir memória e tecnologia, mostrar o futuro das cidades e dar crédito a quem constrói. Seja um tebas.</p></div>
+        <h2>Contato</h2>
+        <a class="botao" href="mailto:contato@tebas.arq.br">Escreva para mim</a>
+        <a class="botao claro" href="#">Instagram</a>
+        <a class="botao claro" href="#">TikTok</a>
+        <a class="botao claro" href="#">YouTube</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><span>© Tebas · tebas.arq.br</span><span>Seja um tebas.</span></footer>
+
+<script>
+const temas = [
+  {id:"g1", nome:"Cidades Inteligentes e Gêmeos Digitais", cor:"#5B7B8C", desc:"A cidade como sistema que se mede, se simula e se ajusta.",
+   assuntos:["Gêmeos digitais urbanos","Internet das Coisas no espaço público","Plataformas operacionais de cidade","Iluminação e redes inteligentes","Edifícios autônomos","Cidades responsivas e adaptativas","Gêmeo digital do Brasil","Cidades que aprendem"]},
+  {id:"g2", nome:"Dados, IA e Arquitetura Computacional", cor:"#8A7A9B", desc:"Programar, medir e projetar com algoritmos.",
+   assuntos:["Dados urbanos abertos","Programação para arquitetos","IA generativa no projeto","Análise espacial e geoprocessamento","Modelagem preditiva do crescimento urbano","Visualização de dados urbanos","Ciência cidadã urbana","O arquiteto aumentado"]},
+  {id:"g3", nome:"Clima, Sustentabilidade e Resiliência", cor:"#7D8B5A", desc:"Projetar para um planeta mais quente e instável.",
+   assuntos:["Ilhas de calor e conforto térmico","Drenagem e cidades-esponja","Infraestrutura verde","Edifícios de energia positiva","Economia circular na construção","Carbono incorporado","Cidades costeiras e elevação do mar","Migração climática e novas cidades"]},
+  {id:"g4", nome:"Construção do Futuro e Novos Materiais", cor:"#B8864E", desc:"Do cinzel do Tebas ao robô no canteiro.",
+   assuntos:["Impressão 3D de edificações","Construção modular e industrializada","Robótica no canteiro","Biomateriais","Saberes construtivos tradicionais","Fabricação digital e CNC","Arquitetura fora da Terra"]},
+  {id:"g5", nome:"Mobilidade e Infraestrutura", cor:"#C9A85C", desc:"Como as pessoas e as coisas vão circular.",
+   assuntos:["Mobilidade baseada em dados","Cidade de 15 minutos","Veículos autônomos","Logística urbana e entregas","Mobilidade aérea urbana","Infraestrutura subterrânea"]},
+  {id:"g6", nome:"Habitação de Interesse Social, Território e Justiça Urbana", cor:"#C96442", desc:"Tecnologia para quem sempre ficou fora do mapa.",
+   assuntos:["HIS e tecnologia","Mapeamento de favelas e periferias","Urbanismo antirracista com dados","Urbanismo participativo digital","Acessibilidade urbana","Cidades para todas as idades","Locação social e retrofit"]},
+  {id:"g7", nome:"Memória, Patrimônio, Ética e Governança", cor:"#6B5444", desc:"Quem constrói, quem decide e quem é lembrado.",
+   assuntos:["Patrimônio histórico digital","Construtores apagados da história","Ética, vigilância e privacidade","Soberania de dados urbanos","Realidade virtual e aumentada","A cidade de 2076"]}
+];
+
+const conexoesExtras = [
+  ["Gêmeos digitais urbanos","Drenagem e cidades-esponja"],["Gêmeos digitais urbanos","Dados urbanos abertos"],
+  ["Dados urbanos abertos","Mapeamento de favelas e periferias"],["Ilhas de calor e conforto térmico","Infraestrutura verde"],
+  ["Ilhas de calor e conforto térmico","Urbanismo antirracista com dados"],["Saberes construtivos tradicionais","Construtores apagados da história"],
+  ["Patrimônio histórico digital","Realidade virtual e aumentada"],["Cidade de 15 minutos","HIS e tecnologia"],
+  ["Mobilidade baseada em dados","Análise espacial e geoprocessamento"],["Ética, vigilância e privacidade","Internet das Coisas no espaço público"],
+  ["Soberania de dados urbanos","Plataformas operacionais de cidade"],["Economia circular na construção","Biomateriais"],
+  ["Construção modular e industrializada","HIS e tecnologia"],["IA generativa no projeto","O arquiteto aumentado"],
+  ["Ciência cidadã urbana","Urbanismo participativo digital"],["Cidades costeiras e elevação do mar","Migração climática e novas cidades"]
+];
+
+// PORTFÓLIO: edite aqui. Em imagem, use por exemplo "imagens/projeto1.jpg"
+const trabalhos = [
+  {titulo:"Projeto 1", ano:"2024", tipo:"Ateliê de Projeto", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""},
+  {titulo:"Projeto 2", ano:"2025", tipo:"Urbanismo", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""},
+  {titulo:"Projeto 3", ano:"2025", tipo:"Dados e mapas", desc:"Descreva aqui o trabalho, o contexto e as ideias principais.", imagem:""}
+];
+
+function mostrar(){
+  const p=(location.hash||"#inicio").slice(1);
+  document.querySelectorAll(".pagina").forEach(s=>s.classList.toggle("visivel",s.id===p));
+  document.querySelectorAll("nav a").forEach(a=>a.classList.toggle("ativo",a.dataset.pagina===p));
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",mostrar); mostrar();
+
+document.getElementById("cards").innerHTML=trabalhos.map(t=>`
+  <div class="card"><div class="imagem">${t.imagem?`<img src="${t.imagem}" alt="${t.titulo}">`:"Imagem do projeto"}</div>
+  <div class="texto"><p class="tag">${t.tipo} · ${t.ano}</p><h3>${t.titulo}</h3><p>${t.desc}</p></div></div>`).join("");
+
+const nos=[],links=[];
+temas.forEach(t=>{
+  nos.push({id:t.id,nome:t.nome,tipo:"tema",cor:t.cor,tema:t.id,desc:t.desc});
+  t.assuntos.forEach(a=>{nos.push({id:a,nome:a,tipo:"assunto",cor:t.cor,tema:t.id,temaNome:t.nome});links.push({source:t.id,target:a});});
+});
+conexoesExtras.forEach(([a,b])=>links.push({source:a,target:b,extra:true}));
+
+const caixa=document.getElementById("grafo"), largura=caixa.clientWidth||1000, altura=caixa.clientHeight||640;
+const svg=d3.select("#grafo").append("svg").attr("viewBox",[0,0,largura,altura]);
+const g=svg.append("g");
+svg.call(d3.zoom().scaleExtent([.4,4]).on("zoom",e=>g.attr("transform",e.transform)));
+
+const sim=d3.forceSimulation(nos)
+  .force("link",d3.forceLink(links).id(d=>d.id).distance(d=>d.extra?150:62))
+  .force("charge",d3.forceManyBody().strength(d=>d.tipo==="tema"?-520:-95))
+  .force("center",d3.forceCenter(largura/2,altura/2))
+  .force("colisao",d3.forceCollide().radius(d=>d.tipo==="tema"?34:11));
+
+const linha=g.append("g").selectAll("line").data(links).join("line")
+  .attr("stroke",d=>d.extra?"#C96442":"#CFC6B8").attr("stroke-opacity",d=>d.extra?.45:.9)
+  .attr("stroke-width",d=>d.extra?1:1.2).attr("stroke-dasharray",d=>d.extra?"3,4":null);
+
+const ponto=g.append("g").selectAll("circle").data(nos).join("circle")
+  .attr("r",d=>d.tipo==="tema"?17:6).attr("fill",d=>d.cor)
+  .attr("stroke","#FBF8F3").attr("stroke-width",d=>d.tipo==="tema"?3:1.5).style("cursor","pointer")
+  .call(d3.drag()
+    .on("start",(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;})
+    .on("drag",(e,d)=>{d.fx=e.x;d.fy=e.y;})
+    .on("end",(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+
+const rotulo=g.append("g").selectAll("text").data(nos.filter(d=>d.tipo==="tema")).join("text")
+  .text(d=>d.nome.split(",")[0]).attr("fill","#1F1E1B").attr("font-size",12)
+  .attr("font-family","Source Serif 4, Georgia, serif").attr("text-anchor","middle").attr("dy",34)
+  .style("pointer-events","none").style("paint-order","stroke").attr("stroke","#FBF8F3").attr("stroke-width",4);
+
+const tip=document.getElementById("tooltip");
+ponto.on("mouseover",(e,d)=>{tip.style.opacity=1;tip.textContent=d.nome;})
+  .on("mousemove",e=>{const r=caixa.getBoundingClientRect();tip.style.left=(e.clientX-r.left+14)+"px";tip.style.top=(e.clientY-r.top+14)+"px";})
+  .on("mouseout",()=>tip.style.opacity=0)
+  .on("click",(e,d)=>{e.stopPropagation();selecionar(d);});
+
+function vizinhos(id){const s=new Set([id]);links.forEach(l=>{if(l.source.id===id)s.add(l.target.id);if(l.target.id===id)s.add(l.source.id);});return s;}
+function selecionar(d){
+  const v=vizinhos(d.id);
+  ponto.transition().duration(250).attr("opacity",n=>v.has(n.id)?1:.15);
+  linha.transition().duration(250).attr("opacity",l=>(l.source.id===d.id||l.target.id===d.id)?1:.05);
+  const ligados=[...v].filter(x=>x!==d.id).map(x=>nos.find(n=>n.id===x).nome);
+  document.getElementById("painel").innerHTML=d.tipo==="tema"
+    ?`<p class="kicker">Grande tema</p><h3>${d.nome}</h3><p>${d.desc}</p><p><strong>${ligados.length} assuntos:</strong> ${ligados.join(" · ")}</p>`
+    :`<p class="kicker">${d.temaNome}</p><h3>${d.nome}</h3><p><strong>Conecta-se com:</strong> ${ligados.join(" · ")}</p><p><em>Em breve: artigo completo sobre este assunto.</em></p>`;
+}
+svg.on("click",()=>{ponto.transition().duration(250).attr("opacity",1);linha.transition().duration(250).attr("opacity",1);});
+
+sim.on("tick",()=>{
+  linha.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y).attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+  ponto.attr("cx",d=>d.x).attr("cy",d=>d.y);
+  rotulo.attr("x",d=>d.x).attr("y",d=>d.y);
+});
+
+const ativos=new Set(temas.map(t=>t.id));
+const leg=document.getElementById("legenda");
+temas.forEach(t=>{
+  const b=document.createElement("button");
+  b.innerHTML=`<span class="bolinha" style="background:${t.cor}"></span>${t.nome.split(",")[0]}`;
+  b.onclick=()=>{
+    ativos.has(t.id)?ativos.delete(t.id):ativos.add(t.id);
+    b.classList.toggle("apagado");
+    ponto.style("display",n=>ativos.has(n.tema)?null:"none");
+    rotulo.style("display",n=>ativos.has(n.tema)?null:"none");
+    linha.style("display",l=>ativos.has(l.source.tema)&&ativos.has(l.target.tema)?null:"none");
+  };
+  leg.appendChild(b);
+});
+</script>
+</body>
+</html>
