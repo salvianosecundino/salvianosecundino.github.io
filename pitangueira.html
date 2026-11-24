@@ -36,10 +36,11 @@
     <a-entity light="type: ambient; intensity: 1.2"></a-entity>
     <a-entity light="type: directional; intensity: 2" position="1 2 2"></a-entity>
 
-    <!-- A largura da imagem do QR = 1 unidade. A árvore tem 3 unidades;
-         scale 0.3 deixa ela com ~0.9x a largura do QR. Ajuste à vontade. -->
+    <!-- A largura da imagem do QR = 1 unidade. A árvore tem 3,015 unidades.
+         scale = 1,80 ÷ (3,015 × largura impressa do QR em metros).
+         Com QR de 18 cm: 1,80 ÷ (3,015 × 0,18) ≈ 3.3 → árvore com 1,80 m. -->
     <a-entity id="alvo" mindar-image-target="targetIndex: 0">
-      <a-gltf-model src="#arvore" rotation="90 0 0" scale="0.3 0.3 0.3"></a-gltf-model>
+      <a-gltf-model src="#arvore" rotation="90 0 0" scale="3.3 3.3 3.3"></a-gltf-model>
     </a-entity>
   </a-scene>
 
