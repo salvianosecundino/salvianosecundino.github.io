@@ -4,92 +4,69 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pitangueira em RA</title>
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
-    html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
-    #aviso {
-      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
-      z-index: 10; background: rgba(0,0,0,.65); color: #fff;
-      padding: 10px 18px; border-radius: 20px; font-size: 15px; text-align: center;
-      transition: opacity .4s; white-space: nowrap;
+    html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #eef3ea; color: #1f2d1a; }
+    model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+    .topo {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 2;
+      padding: 18px 20px 10px; text-align: center; pointer-events: none;
     }
-    #aviso.oculto { opacity: 0; }
+    .topo h1 { margin: 0; font-size: 22px; }
+    .topo p  { margin: 4px 0 0; font-size: 14px; opacity: .75; }
+    #botao-ar {
+      position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%);
+      background: #c0391b; color: #fff; border: 0; border-radius: 30px;
+      padding: 16px 28px; font-size: 18px; font-weight: 600;
+      box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; white-space: nowrap;
+    }
+    #sem-ar {
+      position: absolute; left: 16px; right: 16px; bottom: 28px; z-index: 2;
+      background: #fff; border-radius: 12px; padding: 14px 16px; font-size: 14px;
+      text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.15); display: none;
+    }
+    #progresso {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 15px; opacity: .7;
+    }
   </style>
 </head>
 <body>
-  <div id="aviso">Aponte a câmera para um dos QR codes no chão 🌱</div>
+  <model-viewer
+    id="mv"
+    src="pitangueira.glb"
+    alt="Pitangueira com frutos, 1,5 metro de altura"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    ar-placement="floor"
+    ar-scale="fixed"
+    camera-controls
+    touch-action="pan-y"
+    auto-rotate
+    shadow-intensity="1"
+    exposure="1.1"
+    camera-orbit="30deg 80deg auto">
 
-  <a-scene
-    mindar-image="imageTargetSrc: alvo.mind; maxTrack: 1; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001"
-    color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
+    <div class="topo">
+      <h1>Pitangueira 🌱</h1>
+      <p>Eugenia uniflora · 1,5 m de altura</p>
+    </div>
 
-    <a-assets>
-      <a-asset-item id="arvore" src="pitangueira.glb"></a-asset-item>
-    </a-assets>
+    <div id="progresso" slot="progress-bar">Carregando a árvore…</div>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
-    <a-entity light="type: directional; intensity: 2" position="1 2 2"></a-entity>
+    <button slot="ar-button" id="botao-ar">📱 Ver na sala</button>
 
-    <!-- Os 4 alvos são criados pelo script abaixo -->
-  </a-scene>
+    <div id="sem-ar">
+      Este aparelho ou navegador não abre realidade aumentada.<br>
+      No <b>Android</b>, use o Chrome; no <b>iPhone</b>, use o Safari.
+    </div>
+  </model-viewer>
 
   <script>
-    // ================= AJUSTE AQUI =================
-    const ALTURA_CM   = 150;  // altura da pitangueira
-    const LARGURA_QR_CM = 19; // largura do QR impresso (com a margem branca), medida com régua
-    const LADO_CM     = 100;  // distância entre os CENTROS de QR vizinhos (lado do quadrado)
-    // ===============================================
-    //
-    // Disposição no chão (vista de cima), com a seta de cada folha apontando para o FUNDO:
-    //
-    //        FUNDO
-    //    4 ─────────── 3
-    //    │             │
-    //    │   árvore    │
-    //    │             │
-    //    1 ─────────── 2
-    //     FRENTE (público)
-    //
-    // IMPORTANTE: no compilador do MindAR, envie as imagens na ordem qr_1, qr_2, qr_3, qr_4.
-
-    const ALTURA_MODELO = 3;                          // o .glb tem 3 unidades de altura
-    const escala = (ALTURA_CM / LARGURA_QR_CM) / ALTURA_MODELO;
-    const meio   = (LADO_CM / 2) / LARGURA_QR_CM;     // meio lado, em "larguras de QR"
-
-    // Posição de cada QR em relação ao centro: x = direita, y = fundo
-    const cantos = [
-      [-1, -1],  // QR 1: frente-esquerda
-      [ 1, -1],  // QR 2: frente-direita
-      [ 1,  1],  // QR 3: fundo-direita
-      [-1,  1],  // QR 4: fundo-esquerda
-    ];
-
-    const cena  = document.querySelector('a-scene');
-    const aviso = document.getElementById('aviso');
-    let visiveis = 0;
-
-    cantos.forEach(([cx, cy], i) => {
-      const alvo = document.createElement('a-entity');
-      alvo.setAttribute('mindar-image-target', `targetIndex: ${i}`);
-
-      // No referencial do QR: x = direita, y = topo da folha (fundo), z = para cima do chão.
-      // A árvore fica no centro do quadrado, ou seja, no sentido oposto ao canto do QR.
-      const arvore = document.createElement('a-gltf-model');
-      arvore.setAttribute('src', '#arvore');
-      arvore.setAttribute('position', `${-cx * meio} ${-cy * meio} 0`);
-      arvore.setAttribute('rotation', '90 0 0');
-      arvore.setAttribute('scale', `${escala} ${escala} ${escala}`);
-
-      alvo.appendChild(arvore);
-      alvo.addEventListener('targetFound', () => { visiveis++; aviso.classList.add('oculto'); });
-      alvo.addEventListener('targetLost',  () => { visiveis = Math.max(0, visiveis - 1);
-                                                   if (!visiveis) aviso.classList.remove('oculto'); });
-      cena.appendChild(alvo);
+    const mv = document.getElementById('mv');
+    mv.addEventListener('load', () => {
+      document.getElementById('progresso').style.display = 'none';
+      if (!mv.canActivateAR) document.getElementById('sem-ar').style.display = 'block';
     });
   </script>
 </body>
