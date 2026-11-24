@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Endereços sem "#": o site usa /sobre, /arquivo, /post/... em vez de /#sobre.
+   Se o site ficar numa subpasta (ex.: usuario.github.io/tebas/), troque "/" por "/tebas/". */
+window.TEBAS_BASE = "/";
+if(location.protocol!=="file:"){ const b=document.createElement("base"); b.href=window.TEBAS_BASE; document.head.prepend(b); }
+</script>
 <title>Tebas · Arquitetura, cidades e futuro</title>
 <meta name="description" content="Tebas: portal sobre arquitetura, urbanismo, dados, cidades inteligentes e sustentabilidade. O futuro das cidades, sem esquecer quem as construiu.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -482,6 +488,7 @@ footer li a:hover{color:var(--accent)}
           <p class="revelar atraso-1">Verbetes ampliados no formato de uma pequena enciclopédia, com seções, links para outros verbetes e as fontes de cada informação.</p>
         </div>
         <div class="lista" id="listaArtigos"></div>
+        <div class="revelar" style="margin-top:32px"><a class="btn btn-linha" href="#artigos">ver mais <span class="seta">→</span></a></div>
       </div>
     </section>
 
@@ -2904,7 +2911,8 @@ document.getElementById("menuTemasTela").innerHTML = temas.map(t=>`<a class="chi
 document.getElementById("rodapeTemas").innerHTML = temas.map(t=>`<li><a href="${linkTema(t)}">${esc(t.nome.split(",")[0])}</a></li>`).join("");
 
 /* Artigos em destaque na página inicial */
-document.getElementById("listaArtigos").innerHTML = Object.keys(ARTIGOS).map((a,i)=>{ const t=temaDoAssunto[a];
+const DESTAQUES_INICIO = ["Tebas","ATHIS (Lei 11.888/2008)","Gêmeos digitais urbanos","Realidade virtual e aumentada"];
+document.getElementById("listaArtigos").innerHTML = DESTAQUES_INICIO.filter(a=>ARTIGOS[a]).map((a,i)=>{ const t=temaDoAssunto[a];
   return `<a class="item-lista revelar" href="${linkPost(a)}"><span class="n" style="width:12px;height:12px;border-radius:50%;background:${t.cor}"></span><div><h3>${esc(a)}</h3><p>${esc(VB[a]?VB[a].resumo:"")}</p></div><span class="selo pronto">${ARTIGOS[a].fontes.length} ${ARTIGOS[a].fontes.length===1?"fonte":"fontes"} →</span></a>`; }).join("");
 
 /* Portfólio */
@@ -3125,12 +3133,50 @@ function renderArquivo(){
 }
 
 /* Navegação entre páginas */
+/* Rotas sem "#" (History API). Ao abrir o arquivo direto do computador (file://), continua usando "#". */
+const MODO_HASH = location.protocol==="file:";
+const BASE = window.TEBAS_BASE || "/";
+function rotaAtual(){
+  if(MODO_HASH) return decodeURIComponent((location.hash||"#inicio").slice(1)) || "inicio";
+  let r = location.pathname.startsWith(BASE) ? location.pathname.slice(BASE.length) : location.pathname.replace(/^\//,"");
+  r = decodeURIComponent(r.replace(/(^|\/)index\.html$/,"").replace(/\/$/,""));
+  return r || "inicio";
+}
+function urlDaRota(r){ return MODO_HASH ? "#"+r : BASE + (r==="inicio" ? "" : r); }
+function navegar(r, substituir){
+  r = String(r).replace(/^#/,"");
+  if(MODO_HASH){ location.hash = r; return; }
+  if(rotaAtual()===r && !substituir){ mostrar(); return; }
+  history[substituir?"replaceState":"pushState"]({}, "", urlDaRota(r));
+  mostrar();
+}
+/* Converte links antigos "#rota" em endereços limpos e intercepta os cliques */
+function limparLinks(raiz){
+  if(MODO_HASH || !raiz.querySelectorAll) return;
+  const lista = raiz.matches && raiz.matches('a[href^="#"]') ? [raiz] : [];
+  lista.push(...raiz.querySelectorAll('a[href^="#"]'));
+  lista.forEach(a=>{ const r=a.getAttribute("href").slice(1); if(!r) return; a.dataset.rota=r; a.setAttribute("href", urlDaRota(r)); });
+}
+if(!MODO_HASH){
+  /* Endereço antigo com "#" (ex.: /#sobre) vira /sobre */
+  if(location.hash.length>1) history.replaceState({}, "", urlDaRota(decodeURIComponent(location.hash.slice(1))));
+  limparLinks(document.body);
+  new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>n.nodeType===1&&limparLinks(n)))).observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("click",e=>{
+    const a=e.target.closest("a[data-rota]");
+    if(!a || e.defaultPrevented || e.button!==0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || a.target==="_blank") return;
+    e.preventDefault(); navegar(a.dataset.rota);
+  });
+  window.addEventListener("popstate",mostrar);
+}
+
 function mostrar(){
-  const h = (location.hash||"#inicio").slice(1);
+  const h = rotaAtual();
   let pagina = "inicio";
   if(h.startsWith("tema/")) pagina = renderTema(h.slice(5)) ? "tema" : "temas";
   else if(h.startsWith("post/")) pagina = renderPost(h.slice(5)) ? "post" : "temas";
   else if(h==="arquivo"){ renderArquivo(); pagina="arquivo"; }
+  else if(h==="artigos"){ filtroArquivo="artigos"; renderArquivo(); pagina="arquivo"; }
   else if(["inicio","temas","portfolio","sobre"].includes(h)) pagina = h;
   else if(h==="explorar"){ pagina="inicio"; }
   document.querySelectorAll(".pagina").forEach(p=>p.classList.toggle("visivel",p.id==="pg-"+pagina));
@@ -3142,7 +3188,7 @@ function mostrar(){
   if(pagina==="inicio") iniciarGrafo();
   observarRevelar();
 }
-window.addEventListener("hashchange",mostrar);
+if(MODO_HASH) window.addEventListener("hashchange",mostrar);
 
 /* Menu suspenso de temas */
 const suspenso=document.querySelector(".suspenso"), btnTemas=document.getElementById("btnTemas");
@@ -3395,7 +3441,7 @@ function iniciarGrafo(){
   /* Clique em qualquer lugar fora da nuvem e do painel também devolve as cores */
   document.addEventListener("click",e=>{ if(!sel) return; if(caixa.contains(e.target)||painel.contains(e.target)) return; limparSelecao(); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape") limparSelecao(); });
-  sel3.on("dblclick.nuvem",e=>{ const [px,py]=d3.pointer(e,canvas); const d=noPonto(px,py); if(d) location.hash = d.tipo==="tema" ? linkTema(d.tema) : linkPost(d.id); });
+  sel3.on("dblclick.nuvem",e=>{ const [px,py]=d3.pointer(e,canvas); const d=noPonto(px,py); if(d) navegar(d.tipo==="tema" ? linkTema(d.tema) : linkPost(d.id)); });
 
   /* Painel lateral */
   const painel=document.getElementById("painel");
@@ -3457,7 +3503,7 @@ function iniciarGrafo(){
 
 /* Rolagem suave para a nuvem a partir de botões */
 document.querySelectorAll("[data-rolar]").forEach(a=>a.addEventListener("click",e=>{
-  if((location.hash||"#inicio")==="#inicio"||location.hash==="#explorar"){
+  if(rotaAtual()==="inicio"||rotaAtual()==="explorar"){
     e.preventDefault(); document.getElementById(a.dataset.rolar).scrollIntoView({behavior:"smooth"});
   }
 }));
