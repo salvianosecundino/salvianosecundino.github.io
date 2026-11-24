@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Tebas · Arquitetura, cidades e futuro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<script>
+  /* O site tem uma página só (index.html). Endereços como /sobre ou /post/tebas
+     não existem como arquivos no GitHub Pages, que então abre esta página.
+     Aqui o endereço é repassado ao index.html como /#sobre, e o próprio site
+     volta a mostrá-lo como /sobre e abre a página certa. */
+  (function () {
+    var caminho = location.pathname.replace(/^\/+/, "").replace(/\/+$/, "").replace(/(^|\/)index\.html$/, "");
+    location.replace("/" + location.search + (caminho ? "#" + caminho : ""));
+  })();
+</script>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f3efe7;color:#2a2520;font:16px/1.5 system-ui,sans-serif;text-align:center;padding:24px}
+  a{color:#7a3b2a}
+</style>
+</head>
+<body>
+  <p>Abrindo o Tebas… se nada acontecer, <a href="/">clique aqui para ir ao início</a>.</p>
+</body>
+</html>
