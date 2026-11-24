@@ -20,7 +20,7 @@ if(location.protocol!=="file:"){ const b=document.createElement("base"); b.href=
 <style>
 :root{
   --bg:#F4EFE6; --paper:#FAF7F1; --ink:#1A1916; --muted:#5F5B53; --soft:#8C867B;
-  --line:#E2D9CA; --accent:#C2603F; --accent-dark:#A44F33; --black:#141413;
+  --line:#E2D9CA; --accent:#5C2F20; --accent-dark:#3F1F15; --laranja:#C2603F; /* --laranja: cor ao passar o cursor */ /* antes: laranja #C2603F */ --black:#141413;
   --serif:"Helvetica Neue", Helvetica, Arial, sans-serif; --sans:"Helvetica Neue", Helvetica, Arial, sans-serif;
   --max:1180px; --ease:cubic-bezier(.2,.7,.2,1);
 }
@@ -68,7 +68,7 @@ header{position:sticky;top:0;z-index:50;background:var(--bg);transition:backgrou
 #campoBusca::-webkit-search-cancel-button{display:none}
 /* Logo animada conforme a rolagem */
 #cabecalho .marca{font-size:34px;font-weight:700;letter-spacing:-.045em;transform:scale(calc(1.18 - .18*var(--p,0)));transform-origin:center;transition:transform .15s linear}
-#cabecalho .marca .esquadro{transform:rotate(calc(var(--p,0)*360deg));transition:transform .15s linear}
+#cabecalho .marca .esquadro{fill:var(--accent);transform:rotate(calc(var(--p,0)*360deg));transition:transform .15s linear}
 #cabecalho .marca span{letter-spacing:calc(-.045em - .02em*var(--p,0))}
 
 /* Ao descer, sobra só a logo; ao subir ou passar o mouse, tudo volta */
@@ -82,7 +82,7 @@ header.compacto .suspenso .painel-suspenso{opacity:0;pointer-events:none}
 .marca-mini{display:inline-flex;align-items:baseline;gap:9px;font-size:30px;font-weight:700;letter-spacing:-.045em;line-height:1}
 .menu-grande{max-width:1600px;margin:40px auto 0;display:flex;flex-direction:column}
 .menu-grande a{font-size:clamp(40px,7vw,84px);font-weight:700;letter-spacing:-.045em;line-height:1.08;padding:6px 0;transition:color .2s,transform .3s var(--ease)}
-.menu-grande a:hover{color:var(--accent);transform:translateX(10px)}
+.menu-grande a:hover{color:var(--laranja);transform:translateX(10px)}
 .menu-temas{max-width:1600px;margin:44px auto 60px;display:flex;flex-wrap:wrap;gap:10px}
 .busca-caixa{max-width:900px;margin:40px auto}
 #campoBusca{width:100%;font:inherit;font-size:clamp(28px,4vw,44px);font-weight:500;letter-spacing:-.03em;padding:14px 0;border:0;border-bottom:2px solid var(--ink);background:transparent;color:var(--ink);text-transform:lowercase}
@@ -102,7 +102,7 @@ header.compacto .suspenso .painel-suspenso{opacity:0;pointer-events:none}
 }
 
 /* Barra de progresso */
-#progresso{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60;transition:width .1s linear}
+#progresso{position:fixed;top:0;left:0;height:2px;width:0;background:var(--laranja);z-index:60;transition:width .1s linear}
 
 /* Cabeçalho */
 header{position:sticky;top:0;z-index:50;background:rgba(244,239,230,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .3s,padding .3s}
@@ -127,7 +127,7 @@ nav.principal a:hover::after,nav.principal a.ativo::after{width:100%}
 .btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-size:15px;font-weight:500;transition:transform .25s var(--ease),background .25s,color .25s;cursor:pointer;border:0;font-family:var(--sans)}
 button.btn{font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:transparent}
 .btn-escuro{background:var(--ink);color:var(--paper)}
-.btn-escuro:hover{background:var(--accent);transform:translateY(-2px)}
+.btn-escuro:hover{background:var(--laranja);transform:translateY(-2px)}
 .btn-linha{border:1px solid var(--ink);color:var(--ink);background:transparent}
 .btn-linha:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
 .seta{transition:transform .25s var(--ease)}
@@ -156,7 +156,7 @@ button.btn{font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);b
 .hero{padding:110px 0 90px}
 .rotulo{font-size:14px;letter-spacing:0;text-transform:lowercase;color:var(--accent);font-weight:600;margin-bottom:22px}
 .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.4vw,96px);line-height:1.02;letter-spacing:-.03em;max-width:13ch}
-.hero h1 em{font-style:normal;color:var(--accent)}
+.hero h1 em{font-style:normal;color:var(--laranja)}
 .hero-baixo{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;margin-top:56px;align-items:end}
 .hero-baixo p{font-size:20px;color:var(--muted);max-width:34ch;line-height:1.5}
 .hero-acoes{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
@@ -169,6 +169,11 @@ section.bloco{padding:110px 0;border-top:1px solid var(--line)}
 
 /* Grafo */
 .grafo-area{display:grid;grid-template-columns:1fr 320px;gap:20px}
+/* cidade de ideias: fundo marrom derivado do laranja (--accent #C2603F escurecido, mesmo matiz) */
+:root{--marrom:#7E4430}
+#explorar{background:var(--marrom);border-top:0}
+#explorar .cabeca h2{color:var(--paper)}
+#explorar .cabeca p{color:rgba(250,247,241,.78)}
 #grafo{position:relative;height:780px;background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden}
 .dica{position:absolute;left:18px;bottom:14px;font-size:12px;color:var(--soft);pointer-events:none}
 #tooltip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:13px;padding:6px 10px;border-radius:8px;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:5}
@@ -286,7 +291,7 @@ section.bloco{padding:110px 0;border-top:1px solid var(--line)}
 .fontes{padding-left:24px;clear:both}
 .fontes li{margin:10px 0;font-size:16px;padding:6px 8px;border-radius:8px;transition:background .6s}
 .fontes li a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
-.fontes li a:hover{color:var(--accent)}
+.fontes li a:hover{color:var(--laranja)}
 .fontes .url{display:block;font-size:12.5px;color:var(--soft);text-transform:none;word-break:break-all}
 .destaque-nota{background:#F2DFD3}
 .secao-artigo h2.destaque-nota,.secao-artigo.destaque-nota{background:transparent}
@@ -296,7 +301,7 @@ section.bloco{padding:110px 0;border-top:1px solid var(--line)}
 .figura-verbete figcaption{font-size:13px;color:var(--soft);padding:10px 16px;border-top:1px solid var(--line)}
 .sub-verbete{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:38px 0 12px}
 .link-verbete{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;transition:color .2s}
-.link-verbete:hover{color:var(--accent-dark)}
+.link-verbete:hover{color:var(--laranja)}
 .perguntas{padding-left:22px;margin-bottom:22px}
 .perguntas li{font-size:18px;line-height:1.6;margin-bottom:8px;color:#2D2B27}
 .nota-verbete{font-size:14px;color:var(--soft);border-top:1px solid var(--line);padding-top:16px;margin:10px 0 0}
@@ -335,14 +340,14 @@ section.bloco{padding:110px 0;border-top:1px solid var(--line)}
 
 /* Rodapé preto */
 footer{background:var(--black);color:#E8E3D9;margin-top:40px;padding:90px 0 36px}
-.rodape-topo{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;padding-bottom:70px;border-bottom:1px solid #2E2D2A;margin-bottom:28px}
+.rodape-topo{display:grid;grid-template-columns:1.1fr 1.7fr .9fr .9fr;gap:40px;padding-bottom:70px;border-bottom:1px solid #2E2D2A;margin-bottom:28px}
 .rodape-marca{font-size:40px;color:#F2EEE6}
 .rodape-topo p{color:#9C978C;font-size:15px;margin-top:16px;max-width:30ch}
 footer h4{font-size:14px;letter-spacing:0;text-transform:lowercase;color:#7F7A70;font-weight:600;margin-bottom:18px}
 footer ul{list-style:none}
 footer li{margin-bottom:10px}
 footer li a{color:#E8E3D9;font-size:15px;transition:color .2s}
-footer li a:hover{color:var(--accent)}
+footer li a:hover{color:var(--laranja)}
 .rodape-gigante{font-family:var(--sans);font-weight:500;font-size:clamp(80px,17vw,230px);line-height:.9;letter-spacing:-.05em;color:#23221F;padding:50px 0 24px;user-select:none}
 .rodape-baixo{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px;color:#7F7A70}
 
