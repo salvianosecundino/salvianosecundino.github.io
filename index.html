@@ -164,9 +164,10 @@ section.bloco{padding:110px 0;border-top:1px solid var(--line)}
 .chip{font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);cursor:pointer;transition:all .2s;background:transparent;font-family:var(--sans)}
 .chip:hover{border-color:var(--ink);color:var(--ink)}
 .chip.chip-tema{background:var(--cor-tema);border-color:var(--cor-tema);color:#fff;font-weight:500;display:inline-flex;align-items:center;gap:7px}
-.chip.chip-tema i{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.85}
+.chip.chip-tema i{width:8px;height:8px;min-width:8px;border-radius:50%;background:#fff;opacity:.85;flex:none}
+.chip.chip-tema,.chip.chip-ponto{text-align:left}
 .chip.chip-ponto{display:inline-flex;align-items:center;gap:7px}
-.chip.chip-ponto i{width:7px;height:7px;border-radius:50%;background:var(--cor-tema);flex:none}
+.chip.chip-ponto i{width:7px;height:7px;min-width:7px;border-radius:50%;background:var(--cor-tema);flex:none}
 .chip.chip-tema:hover{filter:brightness(.92);color:#fff;border-color:var(--cor-tema)}
 .painel .acoes{margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:10px}
 .legenda{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
@@ -2030,7 +2031,7 @@ function arteVerbete(v){
   return `<svg class="desenho" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustração de ${esc(v.titulo)}"><rect width="400" height="240" fill="${F}" filter="url(#papel)"/><g class="cor" filter="url(#lapis)">${d}</g><g class="hachura" filter="url(#lapis2)">${d}</g><g class="traco" filter="url(#lapis2)" transform="translate(1.3 -0.9)">${d}</g></svg>`;
 }
 
-/* Perguntas para aprofundar, conforme o tipo de verbete */
+/* Perguntas para refletir, conforme o tipo de verbete */
 const PERGUNTAS = {
   assunto:  a=>[`O que já existe sobre ${a} na sua cidade e quem se beneficia disso?`, `Que dados seriam necessários para avaliar ${a} num bairro específico?`, `Como ${a} pode afetar de forma diferente moradores do centro e da periferia?`],
   pessoa:   a=>[`Que ideias de ${a} continuam atuais e quais precisam ser revistas?`, `Como a trajetória de ${a} dialoga com a realidade brasileira?`, `Quem são as pessoas que hoje continuam ou contestam esse trabalho?`],
@@ -2116,7 +2117,7 @@ function renderPost(s){
     <h2 class="sub-verbete">por que importa</h2>
     <p class="revelar"><b>Para o público em geral:</b> ${esc(ctx.publico)}</p>
     <p class="revelar"><b>Para arquitetos em formação e em atualização:</b> ${esc(ctx.arquitetos)} Vale estudar ${esc(ctx.habilidades.charAt(0).toLowerCase()+ctx.habilidades.slice(1))}</p>
-    <h2 class="sub-verbete">para aprofundar</h2>
+    <h2 class="sub-verbete">para refletir</h2>
     <ul class="perguntas revelar">${(PERGUNTAS[tipo]||PERGUNTAS.conceito)(a).map(q=>`<li>${esc(q)}</li>`).join("")}</ul>`;
   if(contaPalavras(corpo) < 340) corpo += `<p class="revelar">${esc(ctx.panorama.filter(p=>!corpo.includes(esc(p))).join(" "))}</p>`;
 
@@ -2401,11 +2402,19 @@ function iniciarGrafo(){
     if(sim.alpha()<.06) sim.alpha(.06);
   });
   sel3.on("mouseleave.nuvem",()=>{ mouse=null; hover=null; tip.style.opacity=0; });
-  sel3.on("click.nuvem",e=>{ const [px,py]=d3.pointer(e,canvas); const d=noPonto(px,py); if(d) selecionar(d); });
+  sel3.on("click.nuvem",e=>{ const [px,py]=d3.pointer(e,canvas); const d=noPonto(px,py); if(d) selecionar(d); else limparSelecao(); });
+  /* Clique em qualquer lugar fora da nuvem e do painel também devolve as cores */
+  document.addEventListener("click",e=>{ if(!sel) return; if(caixa.contains(e.target)||painel.contains(e.target)) return; limparSelecao(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") limparSelecao(); });
   sel3.on("dblclick.nuvem",e=>{ const [px,py]=d3.pointer(e,canvas); const d=noPonto(px,py); if(d) location.hash = d.tipo==="tema" ? linkTema(d.tema) : linkPost(d.id); });
 
   /* Painel lateral */
   const painel=document.getElementById("painel");
+  const painelInicial=painel.innerHTML;
+  function limparSelecao(){
+    if(!sel) return;
+    sel=null; selViz=null; painel.innerHTML=painelInicial; pedirDesenho();
+  }
   function vizinhos(d){ const s=new Set([d]); for(const l of links){ if(l.source===d) s.add(l.target); if(l.target===d) s.add(l.source); } return s; }
   function selecionar(d){
     sel=d; selViz=vizinhos(d); pedirDesenho();
@@ -2426,7 +2435,7 @@ function iniciarGrafo(){
         <div class="acoes"><a class="btn btn-escuro" href="${linkPost(d.id)}">ler verbete <span class="seta">→</span></a><button class="btn btn-linha" id="limpar">ver tudo</button></div>`;
     }
     painel.querySelectorAll("button.chip").forEach(c=>c.addEventListener("click",()=>{ const n=nos.find(x=>x.id===c.dataset.id); if(n) selecionar(n); }));
-    const l=document.getElementById("limpar"); if(l) l.addEventListener("click",()=>{ sel=null; selViz=null; pedirDesenho(); });
+    const l=document.getElementById("limpar"); if(l) l.addEventListener("click",limparSelecao);
   }
 
   /* Legenda com filtro por tema e por tipo */
