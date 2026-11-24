@@ -12,16 +12,16 @@
       position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
       z-index: 10; background: rgba(0,0,0,.65); color: #fff;
       padding: 10px 18px; border-radius: 20px; font-size: 15px; text-align: center;
-      transition: opacity .4s;
+      transition: opacity .4s; white-space: nowrap;
     }
     #aviso.oculto { opacity: 0; }
   </style>
 </head>
 <body>
-  <div id="aviso">Aponte a câmera para o QR code na folha 🌱</div>
+  <div id="aviso">Aponte a câmera para um dos QR codes no chão 🌱</div>
 
   <a-scene
-    mindar-image="imageTargetSrc: alvo.mind; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001"
+    mindar-image="imageTargetSrc: alvo.mind; maxTrack: 1; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001"
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true"
     vr-mode-ui="enabled: false"
@@ -32,31 +32,65 @@
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
     <a-entity light="type: ambient; intensity: 1.2"></a-entity>
     <a-entity light="type: directional; intensity: 2" position="1 2 2"></a-entity>
 
-    <!-- A escala é calculada no script abaixo (ALTURA_CM e LARGURA_IMPRESSA_CM). -->
-    <a-entity id="alvo" mindar-image-target="targetIndex: 0">
-      <a-gltf-model id="modelo" src="#arvore" rotation="90 0 0"></a-gltf-model>
-    </a-entity>
+    <!-- Os 4 alvos são criados pelo script abaixo -->
   </a-scene>
 
   <script>
-    // ===== AJUSTE AQUI =====
-    const ALTURA_CM = 40;            // altura desejada da pitangueira
-    const LARGURA_IMPRESSA_CM = 18;  // largura do QR impresso na folha, MEDIDA COM RÉGUA,
-                                     // incluindo a margem branca em volta
-    // =======================
-    // No MindAR, 1 unidade = largura da imagem impressa. O modelo tem 3 unidades de altura.
-    const ALTURA_MODELO = 3;
-    const s = (ALTURA_CM / LARGURA_IMPRESSA_CM) / ALTURA_MODELO;
-    document.getElementById('modelo').setAttribute('scale', `${s} ${s} ${s}`);
+    // ================= AJUSTE AQUI =================
+    const ALTURA_CM   = 150;  // altura da pitangueira
+    const LARGURA_QR_CM = 19; // largura do QR impresso (com a margem branca), medida com régua
+    const LADO_CM     = 100;  // distância entre os CENTROS de QR vizinhos (lado do quadrado)
+    // ===============================================
+    //
+    // Disposição no chão (vista de cima), com a seta de cada folha apontando para o FUNDO:
+    //
+    //        FUNDO
+    //    4 ─────────── 3
+    //    │             │
+    //    │   árvore    │
+    //    │             │
+    //    1 ─────────── 2
+    //     FRENTE (público)
+    //
+    // IMPORTANTE: no compilador do MindAR, envie as imagens na ordem qr_1, qr_2, qr_3, qr_4.
 
+    const ALTURA_MODELO = 3;                          // o .glb tem 3 unidades de altura
+    const escala = (ALTURA_CM / LARGURA_QR_CM) / ALTURA_MODELO;
+    const meio   = (LADO_CM / 2) / LARGURA_QR_CM;     // meio lado, em "larguras de QR"
+
+    // Posição de cada QR em relação ao centro: x = direita, y = fundo
+    const cantos = [
+      [-1, -1],  // QR 1: frente-esquerda
+      [ 1, -1],  // QR 2: frente-direita
+      [ 1,  1],  // QR 3: fundo-direita
+      [-1,  1],  // QR 4: fundo-esquerda
+    ];
+
+    const cena  = document.querySelector('a-scene');
     const aviso = document.getElementById('aviso');
-    const alvo = document.getElementById('alvo');
-    alvo.addEventListener('targetFound', () => aviso.classList.add('oculto'));
-    alvo.addEventListener('targetLost',  () => aviso.classList.remove('oculto'));
+    let visiveis = 0;
+
+    cantos.forEach(([cx, cy], i) => {
+      const alvo = document.createElement('a-entity');
+      alvo.setAttribute('mindar-image-target', `targetIndex: ${i}`);
+
+      // No referencial do QR: x = direita, y = topo da folha (fundo), z = para cima do chão.
+      // A árvore fica no centro do quadrado, ou seja, no sentido oposto ao canto do QR.
+      const arvore = document.createElement('a-gltf-model');
+      arvore.setAttribute('src', '#arvore');
+      arvore.setAttribute('position', `${-cx * meio} ${-cy * meio} 0`);
+      arvore.setAttribute('rotation', '90 0 0');
+      arvore.setAttribute('scale', `${escala} ${escala} ${escala}`);
+
+      alvo.appendChild(arvore);
+      alvo.addEventListener('targetFound', () => { visiveis++; aviso.classList.add('oculto'); });
+      alvo.addEventListener('targetLost',  () => { visiveis = Math.max(0, visiveis - 1);
+                                                   if (!visiveis) aviso.classList.remove('oculto'); });
+      cena.appendChild(alvo);
+    });
   </script>
 </body>
 </html>
