@@ -74,7 +74,7 @@ header.compacto .suspenso .painel-suspenso{opacity:0;pointer-events:none}
 .sobreposicao{position:fixed;inset:0;z-index:80;background:var(--bg);padding:0 28px;opacity:0;pointer-events:none;transform:translateY(-12px);transition:opacity .35s var(--ease),transform .35s var(--ease);overflow-y:auto}
 .sobreposicao.aberta{opacity:1;pointer-events:auto;transform:none}
 .sobre-topo{display:flex;justify-content:space-between;align-items:center;height:88px;max-width:1600px;margin:0 auto}
-.marca-mini{display:inline-flex;align-items:flex-end;gap:9px;font-size:30px;font-weight:700;letter-spacing:-.045em;line-height:1}
+.marca-mini{display:inline-flex;align-items:baseline;gap:9px;font-size:30px;font-weight:700;letter-spacing:-.045em;line-height:1}
 .menu-grande{max-width:1600px;margin:40px auto 0;display:flex;flex-direction:column}
 .menu-grande a{font-size:clamp(40px,7vw,84px);font-weight:700;letter-spacing:-.045em;line-height:1.08;padding:6px 0;transition:color .2s,transform .3s var(--ease)}
 .menu-grande a:hover{color:var(--accent);transform:translateX(10px)}
@@ -104,10 +104,11 @@ header{position:sticky;top:0;z-index:50;background:rgba(244,239,230,.86);backdro
 header.rolado{border-bottom-color:var(--line)}
 .topo{display:flex;align-items:center;justify-content:space-between;height:72px;transition:height .3s var(--ease)}
 header.rolado .topo{height:60px}
-.marca,.rodape-marca{display:inline-flex;align-items:flex-end;gap:9px;font-family:var(--sans);font-weight:500;letter-spacing:-.04em;line-height:1}
+.marca,.rodape-marca{display:inline-flex;align-items:baseline;gap:9px;font-family:var(--sans);font-weight:500;letter-spacing:-.04em;line-height:1}
 .marca{font-size:26px;color:var(--ink)}
-.esquadro{width:1em;height:1em;fill:currentColor;flex:none;transition:transform .5s var(--ease)}
-.marca span,.rodape-marca span{position:relative;top:.04em}
+/* o triângulo (logo) tem a mesma altura da letra "t" e se apoia na linha de base do texto */
+.esquadro{width:.8em;height:.8em;position:relative;top:.07em;fill:currentColor;flex:none;transition:transform .5s var(--ease)}
+
 nav.principal{display:flex;gap:30px;font-size:15px}
 nav.principal a{color:var(--muted);position:relative;padding:4px 0;transition:color .2s}
 nav.principal a::after{content:"";position:absolute;left:0;bottom:-2px;height:1px;width:0;background:var(--ink);transition:width .3s var(--ease)}
