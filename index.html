@@ -130,6 +130,7 @@ button.btn{font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);b
 .btn-escuro:hover{background:var(--laranja);transform:translateY(-2px)}
 .btn-linha{border:1px solid var(--ink);color:var(--ink);background:transparent}
 .btn-linha:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+.link-off{opacity:.45;cursor:default;pointer-events:none}
 .seta{transition:transform .25s var(--ease)}
 .btn:hover .seta,.card:hover .seta,.item-lista:hover .seta{transform:translateX(4px)}
 
@@ -493,7 +494,7 @@ footer li a:hover{color:var(--laranja)}
           <span class="linha-titulo"><span><em>esquecer</em> quem as construiu.</span></span>
         </h1>
         <div class="hero-baixo">
-          <p class="revelar atraso-2">Um portal sobre arquitetura, urbanismo, cidades inteligentes, clima e memória, para o público em geral e para quem está se formando na profissão.</p>
+          <p class="revelar atraso-2">Um portal sobre arquitetura, urbanismo, cidades inteligentes, clima e memória, para o público em geral, arquitetos e urbanistas e para quem está se formando na profissão.</p>
           <div class="hero-acoes revelar atraso-3">
             <a href="#explorar" class="btn btn-escuro" data-rolar="explorar">Explorar a cidade de ideias <span class="seta">→</span></a>
             <a href="#sobre" class="btn btn-linha">Por que Tebas?</a>
@@ -506,7 +507,7 @@ footer li a:hover{color:var(--laranja)}
       <div class="wrap">
         <div class="cabeca">
           <h2 class="revelar">Nove temas para os próximos cinquenta anos</h2>
-          <p class="revelar atraso-1">Do gêmeo digital à habitação de interesse social, do cinzel de Tebas ao robô no canteiro: nove caminhos para entender o que está mudando no jeito de projetar, construir e viver as cidades. Cada tema reúne artigos, vídeos e estudos, escritos para quem já exerce a profissão, para quem está se formando nela e para qualquer pessoa curiosa sobre o lugar onde vive.</p>
+          <p class="revelar atraso-1">Nove caminhos para entender o que está mudando no jeito de projetar, construir e viver as cidades, do gêmeo digital à habitação social, do cinzel de Tebas ao robô no canteiro. Escolha um e siga as conexões.</p>
         </div>
         <div class="grade" id="gradeTemas"></div>
       </div>
@@ -546,8 +547,8 @@ footer li a:hover{color:var(--laranja)}
 
     <section class="citacao">
       <div class="wrap">
-        <blockquote class="revelar">“Tebas” vem do tupi <em>teba</em>: forte, hábil, desembaraçado. Foi também o apelido de um construtor escravizado que ergueu a São Paulo colonial, conquistou sua alforria e continuou trabalhando como arquiteto.</blockquote>
-        <cite class="revelar atraso-1">Joaquim Pinto de Oliveira, o Tebas, só foi reconhecido como arquiteto em 2018.</cite>
+        <blockquote class="revelar">Em tupi, <em>teba</em> quer dizer forte, hábil, desembaraçado. Foi também o nome de Joaquim Pinto de Oliveira, construtor negro escravizado que ergueu a São Paulo do século 18, conquistou a liberdade e seguiu trabalhando.</blockquote>
+        <cite class="revelar atraso-1">Ele foi reconhecido como arquiteto em 2018, mais de 200 anos depois.</cite>
       </div>
     </section>
 
@@ -644,18 +645,15 @@ footer li a:hover{color:var(--laranja)}
             <h2 class="revelar">Quem sou eu</h2>
             <p class="revelar">meu nome é guilherme salviano secundino. sou estudante do bacharelado interdisciplinar em ciências e humanidades da ufscar, campus são josé do rio preto, e pretendo seguir no segundo ciclo em arquitetura, com ênfase em habitação de interesse social.</p>
             <h2 class="revelar">Por que este site existe</h2>
-            <p class="revelar">criei este portal para divulgar os trabalhos que desenvolvo ao longo da graduação. ressalto que ainda não sou arquiteto formado e que o site não tem a intenção de sugerir o contrário: ele é dedicado ao arquiteto tebas e à visibilidade que sua trajetória carrega.</p>
-            <div class="destaque revelar">Unir memória e tecnologia, mostrar o futuro das cidades e dar crédito a quem constrói.</div>
-            <p class="revelar">por meu interesse em softwares e tecnologias inovadoras, destino este espaço a relacionar temas de arquitetura, urbanismo, dados e representatividade.</p>
-            <p class="revelar">O nome homenageia Joaquim Pinto de Oliveira, o Tebas, construtor negro escravizado que ergueu obras fundamentais da São Paulo do século 18 e só foi reconhecido como arquiteto em 2018. Em tupi, “teba” quer dizer forte, hábil, desembaraçado: alguém que domina as técnicas do seu ofício, como Tebas dominava a cantaria, a arte de talhar e assentar a pedra.</p>
-            <p class="revelar">Se Tebas trabalhasse hoje, sua cantaria teria outros nomes: modelagem BIM e paramétrica, programação e análise de dados urbanos, simulação de clima, luz e energia, fabricação digital e robótica.</p>
-            <div class="destaque revelar">Técnicas diferentes, o mesmo princípio de conhecer a fundo a técnica ou material manuseado.</div>
+            <p class="revelar">criei este portal para divulgar os trabalhos que desenvolvo ao longo da graduação e também correlacionar os temas que acho pertinentes na minha formação. ressalto que ainda não sou arquiteto formado e que o site não tem a intenção de sugerir o contrário: ele é dedicado ao arquiteto tebas e à visibilidade que sua trajetória carrega.</p>
+            <p class="revelar">O nome homenageia Joaquim Pinto de Oliveira, o Tebas, mestre da cantaria, a arte de talhar e assentar a pedra, com a qual ergueu obras fundamentais da São Paulo do século 18.</p>
+            <div class="destaque revelar">Se Tebas trabalhasse hoje, sua cantaria teria outros nomes: modelagem BIM e paramétrica, programação e análise de dados urbanos, simulação de clima, luz e energia, fabricação digital e robótica.</div>
             <h2 class="revelar">Contato</h2>
             <div class="contatos revelar">
               <a class="btn btn-escuro" href="mailto:salvianosecundino@gmail.com">Escreva para mim</a>
-              <a class="btn btn-linha" href="#" target="_blank" rel="noopener">Instagram</a>
-              <a class="btn btn-linha" href="#" target="_blank" rel="noopener">TikTok</a>
-              <a class="btn btn-linha" href="#" target="_blank" rel="noopener">YouTube</a>
+              <a class="btn btn-linha link-off" aria-disabled="true" title="em breve">Instagram</a>
+              <a class="btn btn-linha link-off" aria-disabled="true" title="em breve">TikTok</a>
+              <a class="btn btn-linha link-off" aria-disabled="true" title="em breve">YouTube</a>
             </div>
           </div>
         </div>
@@ -686,9 +684,9 @@ footer li a:hover{color:var(--laranja)}
       <div>
         <h4>Redes</h4>
         <ul>
-          <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
-          <li><a href="#" target="_blank" rel="noopener">TikTok</a></li>
-          <li><a href="#" target="_blank" rel="noopener">YouTube</a></li>
+          <li><a class="link-off" aria-disabled="true" title="em breve">Instagram</a></li>
+          <li><a class="link-off" aria-disabled="true" title="em breve">TikTok</a></li>
+          <li><a class="link-off" aria-disabled="true" title="em breve">YouTube</a></li>
           <li><a href="mailto:salvianosecundino@gmail.com">E-mail</a></li>
         </ul>
       </div>
