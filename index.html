@@ -106,6 +106,8 @@ header.rolado{border-bottom-color:var(--line)}
 header.rolado .topo{height:60px}
 .marca,.rodape-marca{display:inline-flex;align-items:baseline;gap:9px;font-family:var(--sans);font-weight:500;letter-spacing:-.04em;line-height:1}
 .marca{font-size:26px;color:var(--ink)}
+/* o "b" é aparado no topo para ficar da altura do "t" e do triângulo (ajustado por script) */
+.palavra-logo{display:inline-block;clip-path:inset(var(--corte,0%) -20% -20% -20%)}
 /* o triângulo (logo) tem a mesma altura da letra "t" e se apoia na linha de base do texto */
 .esquadro{width:.8em;height:.8em;position:relative;top:.07em;fill:currentColor;flex:none;transition:transform .5s var(--ease)}
 
@@ -405,7 +407,7 @@ footer li a:hover{color:var(--accent)}
       </div>
       <a class="pilula" href="#explorar" data-rolar="explorar" style="--i:2">cidade de ideias</a>
     </div>
-    <a href="#inicio" class="marca" aria-label="tebas, início"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span>tebas</span></a>
+    <a href="#inicio" class="marca" aria-label="tebas, início"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span class="palavra-logo">tebas</span></a>
     <div class="grupo dir">
       <a class="pilula" href="#arquivo" data-pagina="arquivo" style="--i:3">arquivo</a>
       <a class="pilula" href="#portfolio" data-pagina="portfolio" style="--i:2">portfólio</a>
@@ -418,7 +420,7 @@ footer li a:hover{color:var(--accent)}
 
 <!-- Menu em tela cheia -->
 <div class="sobreposicao" id="menuTela" aria-hidden="true">
-  <div class="sobre-topo"><span class="marca-mini"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span>tebas</span></span><button class="icone fechar" data-fechar aria-label="fechar">✕</button></div>
+  <div class="sobre-topo"><span class="marca-mini"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span class="palavra-logo">tebas</span></span><button class="icone fechar" data-fechar aria-label="fechar">✕</button></div>
   <nav class="menu-grande">
     <a href="#inicio">início</a><a href="#temas">temas</a><a href="#explorar" data-rolar="explorar">cidade de ideias</a><a href="#arquivo">arquivo</a><a href="#portfolio">portfólio</a><a href="#sobre">sobre</a>
   </nav>
@@ -427,7 +429,7 @@ footer li a:hover{color:var(--accent)}
 
 <!-- Busca -->
 <div class="sobreposicao" id="buscaTela" aria-hidden="true">
-  <div class="sobre-topo"><span class="marca-mini"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span>tebas</span></span><button class="icone fechar" data-fechar aria-label="fechar">✕</button></div>
+  <div class="sobre-topo"><span class="marca-mini"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span class="palavra-logo">tebas</span></span><button class="icone fechar" data-fechar aria-label="fechar">✕</button></div>
   <div class="busca-caixa">
     <input id="campoBusca" type="search" placeholder="busque um tema ou assunto" autocomplete="off" aria-label="buscar">
     <div id="resultadosBusca"></div>
@@ -601,7 +603,7 @@ footer li a:hover{color:var(--accent)}
   <div class="wrap">
     <div class="rodape-topo">
       <div>
-        <div class="rodape-marca"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span>tebas</span></div>
+        <div class="rodape-marca"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span class="palavra-logo">tebas</span></div>
         <p>O futuro das cidades, sem esquecer quem as construiu.</p>
       </div>
       <div><h4>Temas</h4><ul id="rodapeTemas"></ul></div>
@@ -3143,6 +3145,25 @@ document.addEventListener("click",e=>{
   const opcoes=VERBETES.map(v=>linkPost(v.titulo).replace(/^#/,"")).filter(r=>r!==atual);
   navegar(opcoes[Math.floor(Math.random()*opcoes.length)]);
 });
+
+/* Logo: corta a haste do "b" na altura exata do "t", seja qual for a fonte carregada */
+function ajustarLogo(){
+  document.querySelectorAll(".palavra-logo").forEach(sp=>{
+    const cs=getComputedStyle(sp), c=document.createElement("canvas").getContext("2d");
+    c.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const alturaT=c.measureText("t").actualBoundingBoxAscent;
+    const marca=document.createElement("i"); marca.style.cssText="display:inline-block;width:0;height:0;vertical-align:baseline";
+    sp.appendChild(marca);
+    const r=sp.getBoundingClientRect(), base=marca.getBoundingClientRect().bottom; marca.remove();
+    if(!r.height||!sp.offsetHeight) return;
+    const escala=r.height/sp.offsetHeight;
+    const corte=(base - alturaT*escala - r.top)/r.height*100;
+    sp.style.setProperty("--corte", Math.max(0,corte).toFixed(2)+"%");
+  });
+}
+ajustarLogo();
+if(document.fonts) document.fonts.ready.then(ajustarLogo);
+window.addEventListener("resize",ajustarLogo);
 
 /* Navegação entre páginas */
 /* Rotas sem "#" (History API). Ao abrir o arquivo direto do computador (file://), continua usando "#". */
