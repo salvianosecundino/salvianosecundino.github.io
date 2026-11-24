@@ -53,6 +53,8 @@ header{position:sticky;top:0;z-index:50;background:var(--bg);transition:backgrou
 .painel-suspenso{position:absolute;top:calc(100% + 10px);left:0;min-width:320px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:0 20px 40px -24px rgba(26,25,22,.35);
   opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .25s,transform .25s var(--ease)}
 .suspenso.aberto .painel-suspenso{opacity:1;transform:none;pointer-events:auto}
+/* ponte invisível no vão entre o botão e o painel, para o menu não fechar no caminho */
+.painel-suspenso::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
 .painel-suspenso a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;font-size:15px;transition:background .2s}
 .painel-suspenso a:hover{background:#EEE8DD}
 .painel-suspenso i{width:10px;height:10px;border-radius:50%;flex:none}
@@ -115,6 +117,7 @@ nav.principal a:hover::after,nav.principal a.ativo::after{width:100%}
 
 /* Botões */
 .btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-size:15px;font-weight:500;transition:transform .25s var(--ease),background .25s,color .25s;cursor:pointer;border:0;font-family:var(--sans)}
+button.btn{font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:transparent}
 .btn-escuro{background:var(--ink);color:var(--paper)}
 .btn-escuro:hover{background:var(--accent);transform:translateY(-2px)}
 .btn-linha{border:1px solid var(--ink);color:var(--ink);background:transparent}
@@ -3058,7 +3061,7 @@ function renderArtigo(a){
       <section class="secao-artigo" id="secao-fontes"><h2 class="sub-verbete">notas e fontes</h2>
         <ol class="fontes">${art.fontes.map((f,i)=>`<li id="nota-${i+1}"><a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.titulo)}</a><span class="url">${esc(f.url.replace(/^https?:\/\//,"").slice(0,70))}${f.url.length>78?"…":""}</span></li>`).join("")}</ol></section>
       <div class="nota-verbete revelar">artigo do tema <a href="${linkTema(t)}">${esc(t.nome)}</a>, escrito a partir das fontes listadas acima. encontrou um erro ou tem uma fonte melhor? escreva para salvianosecundino@gmail.com.</div>
-      <p style="margin-top:40px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-linha" href="${linkTema(t)}">voltar ao diretório <span class="seta">→</span></a><a class="btn btn-linha" href="#arquivo">ver o arquivo</a></p>
+      <p style="margin-top:40px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-linha" href="${linkTema(t)}">voltar ao diretório <span class="seta">→</span></a><button type="button" class="btn btn-linha" data-aleatorio>verbete aleatório</button><a class="btn btn-linha" href="#arquivo">ver o arquivo</a></p>
     </div>`;
   const cont=document.getElementById("conteudoPost");
   const rolarPara=el=>{ if(!el) return; const y=el.getBoundingClientRect().top+window.scrollY-110; window.scrollTo({top:y,behavior:"smooth"}); el.classList.add("destaque-nota"); setTimeout(()=>el.classList.remove("destaque-nota"),1600); };
@@ -3113,7 +3116,7 @@ function renderPost(s){
         <h2>continue explorando</h2>
         <div class="lista" style="margin-top:0">${rel.map(r=>`<a class="item-lista" href="${linkPost(r)}"><span class="n" style="width:12px;height:12px;border-radius:50%;background:${temaDoAssunto[r].cor}"></span><div><h3 style="font-size:20px">${esc(r)}</h3><p>${VB[r]?NOME_TIPO[VB[r].tipo]+" · ":""}${esc(temaDoAssunto[r].nome.split(",")[0])}</p></div><span class="seta">→</span></a>`).join("")}</div>
       </div>
-      <p style="margin-top:40px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-linha" href="${linkTema(t)}">voltar ao diretório <span class="seta">→</span></a><a class="btn btn-linha" href="#arquivo">ver o arquivo</a></p>
+      <p style="margin-top:40px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-linha" href="${linkTema(t)}">voltar ao diretório <span class="seta">→</span></a><button type="button" class="btn btn-linha" data-aleatorio>verbete aleatório</button><a class="btn btn-linha" href="#arquivo">ver o arquivo</a></p>
     </div>`;
   return true;
 }
@@ -3131,6 +3134,14 @@ function renderArquivo(){
     <div class="lista">${lista.map(v=>{const t=temas[v.tema-1];return `<a class="item-lista" href="${linkPost(v.titulo)}"><span class="n" style="width:12px;height:12px;border-radius:50%;background:${t.cor}"></span><div><h3 style="font-size:21px">${esc(v.titulo)}</h3><p>${esc(v.resumo)}</p></div><span class="selo ${ARTIGOS[v.titulo]?"pronto":""}">${ARTIGOS[v.titulo]?"artigo completo":NOME_TIPO[v.tipo]}</span></a>`;}).join("")}</div>`;
   document.querySelectorAll(".filtros-arquivo .chip").forEach(b=>b.addEventListener("click",()=>{filtroArquivo=b.dataset.f;renderArquivo();}));
 }
+
+/* Botão "verbete aleatório": abre um verbete ou artigo qualquer, diferente do atual */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-aleatorio]"); if(!b) return;
+  const atual=rotaAtual();
+  const opcoes=VERBETES.map(v=>linkPost(v.titulo).replace(/^#/,"")).filter(r=>r!==atual);
+  navegar(opcoes[Math.floor(Math.random()*opcoes.length)]);
+});
 
 /* Navegação entre páginas */
 /* Rotas sem "#" (History API). Ao abrir o arquivo direto do computador (file://), continua usando "#". */
@@ -3195,8 +3206,9 @@ const suspenso=document.querySelector(".suspenso"), btnTemas=document.getElement
 function fecharSuspenso(){ suspenso.classList.remove("aberto"); btnTemas.setAttribute("aria-expanded","false"); }
 btnTemas.addEventListener("click",e=>{ e.stopPropagation(); const a=suspenso.classList.toggle("aberto"); btnTemas.setAttribute("aria-expanded",a); });
 if(window.matchMedia("(hover:hover)").matches){
-  suspenso.addEventListener("mouseenter",()=>suspenso.classList.add("aberto"));
-  suspenso.addEventListener("mouseleave",fecharSuspenso);
+  let tempoFechar;
+  suspenso.addEventListener("mouseenter",()=>{ clearTimeout(tempoFechar); suspenso.classList.add("aberto"); btnTemas.setAttribute("aria-expanded","true"); });
+  suspenso.addEventListener("mouseleave",()=>{ clearTimeout(tempoFechar); tempoFechar=setTimeout(fecharSuspenso,300); });
 }
 document.addEventListener("click",e=>{ if(!suspenso.contains(e.target)) fecharSuspenso(); });
 
@@ -3241,7 +3253,7 @@ window.addEventListener("scroll",()=>{
   document.getElementById("progresso").style.width=(max>0? y/max*100 : 0)+"%";
   cab.style.setProperty("--p", Math.min(y/180,1).toFixed(3));
   const descendo = y>ultimoY+2, subindo = y<ultimoY-2;
-  if(y>140 && descendo){ cab.classList.add("compacto"); fecharSuspenso(); }
+  if(y>140 && descendo && !suspenso.matches(":hover")){ cab.classList.add("compacto"); fecharSuspenso(); }
   else if(subindo || y<=140) cab.classList.remove("compacto");
   ultimoY=y;
 },{passive:true});
