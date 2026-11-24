@@ -172,6 +172,34 @@ section.bloco{padding:110px 0;border-top:1px solid var(--line)}
 /* cidade de ideias: fundo marrom derivado do laranja (--accent #C2603F escurecido, mesmo matiz) */
 :root{--marrom:#7E4430}
 #explorar{background:var(--marrom);border-top:0}
+.btn-claro{background:var(--paper);color:var(--ink);border:1px solid var(--paper)}
+.btn-claro:hover{background:var(--laranja);border-color:var(--laranja);color:var(--paper)}
+
+/* página da cidade de ideias em tela cheia */
+.cidade-tela{padding:0}
+#grafoCidade{position:relative;height:calc(100vh - 88px);min-height:560px;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
+#grafoCidade canvas{position:absolute;inset:0}
+.tooltip-grafo{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:13px;padding:6px 10px;border-radius:8px;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:5}
+.cidade-topo{position:absolute;top:22px;left:28px;max-width:420px;z-index:3;pointer-events:none;background:rgba(250,247,241,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:14px 18px;border-radius:16px}
+.cidade-topo a{pointer-events:auto}
+.cidade-topo .trilha{margin-bottom:6px}
+.cidade-topo h1{font-size:clamp(34px,4vw,52px);line-height:1;margin-bottom:10px}
+.cidade-topo p{font-size:14px;color:var(--muted);line-height:1.5}
+.painel-flutuante{position:absolute;top:22px;right:22px;width:360px;max-height:calc(100% - 44px);overflow:auto;z-index:4;box-shadow:0 18px 40px rgba(26,25,22,.14);opacity:0;transform:translateX(24px);pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.painel-flutuante.aberto{opacity:1;transform:none;pointer-events:auto}
+.painel .fechar-painel{display:none}
+.painel-flutuante .fechar-painel{display:block;position:absolute;top:12px;right:14px;background:none;border:0;font-size:26px;line-height:1;color:var(--soft);cursor:pointer}
+.painel-flutuante .fechar-painel:hover{color:var(--laranja)}
+.legenda-flutuante{position:absolute;left:28px;bottom:44px;right:410px;margin:0;z-index:3}
+#grafoCidade .dica{left:28px;bottom:16px;z-index:3}
+@media(max-width:820px){
+  #grafoCidade{height:calc(100vh - 70px)}
+  .cidade-topo{left:12px;right:12px;top:12px;max-width:none;padding:10px 14px}
+  .cidade-topo p{display:none}
+  .painel-flutuante{left:12px;right:12px;top:auto;bottom:12px;width:auto;max-height:55%}
+  .legenda-flutuante{left:12px;right:12px;bottom:40px;max-height:30%;overflow:auto}
+  #grafoCidade .dica{left:12px}
+}
 #explorar .cabeca h2{color:var(--paper)}
 #explorar .cabeca p{color:rgba(250,247,241,.78)}
 #grafo{position:relative;height:780px;background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden}
@@ -419,7 +447,7 @@ footer li a:hover{color:var(--laranja)}
         <button class="pilula" id="btnTemas" aria-expanded="false" aria-haspopup="true" data-pagina="temas">temas <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <div class="painel-suspenso" id="listaTemasMenu"></div>
       </div>
-      <a class="pilula" href="#explorar" data-rolar="explorar" style="--i:2">cidade de ideias</a>
+      <a class="pilula" href="#cidade" data-pagina="cidade" style="--i:2">cidade de ideias</a>
     </div>
     <a href="#inicio" class="marca" aria-label="tebas, início"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span class="palavra-logo">tebas</span></a>
     <div class="grupo dir">
@@ -436,7 +464,7 @@ footer li a:hover{color:var(--laranja)}
 <div class="sobreposicao" id="menuTela" aria-hidden="true">
   <div class="sobre-topo"><span class="marca-mini"><svg class="esquadro" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1.5 22.5 H22.5 V1.5 Z M8.74 19.5 H19.5 V8.74 Z"/></svg><span class="palavra-logo">tebas</span></span><button class="icone fechar" data-fechar aria-label="fechar">✕</button></div>
   <nav class="menu-grande">
-    <a href="#inicio">início</a><a href="#temas">temas</a><a href="#explorar" data-rolar="explorar">cidade de ideias</a><a href="#arquivo">arquivo</a><a href="#portfolio">portfólio</a><a href="#sobre">sobre</a>
+    <a href="#inicio">início</a><a href="#temas">temas</a><a href="#cidade">cidade de ideias</a><a href="#arquivo">arquivo</a><a href="#portfolio">portfólio</a><a href="#sobre">sobre</a>
   </nav>
   <div class="menu-temas" id="menuTemasTela"></div>
 </div>
@@ -498,6 +526,7 @@ footer li a:hover{color:var(--laranja)}
           </aside>
         </div>
         <div class="legenda" id="legenda"></div>
+        <div class="revelar" style="margin-top:28px"><a class="btn btn-claro" href="#cidade">abrir a cidade de ideias em tela cheia <span class="seta">→</span></a></div>
       </div>
     </section>
 
@@ -561,6 +590,23 @@ footer li a:hover{color:var(--laranja)}
   </div>
 
   <!-- DIRETÓRIO DE UM TEMA -->
+  <!-- CIDADE DE IDEIAS EM TELA CHEIA -->
+  <div class="pagina" id="pg-cidade">
+    <section class="cidade-tela">
+      <div id="grafoCidade">
+        <div id="tooltipCidade" class="tooltip-grafo"></div>
+        <div class="cidade-topo">
+          <div class="trilha"><a href="#inicio">início</a> / cidade de ideias</div>
+          <h1>cidade de ideias</h1>
+          <p>Todos os verbetes do Tebas e as ligações entre eles. Aproxime para ver os nomes, arraste para passear e clique em um ponto para abrir o resumo.</p>
+        </div>
+        <aside class="painel painel-flutuante" id="painelCidade"></aside>
+        <div class="legenda legenda-flutuante" id="legendaCidade"></div>
+        <div class="dica">role para aproximar · arraste para mover · clique duas vezes para abrir o verbete</div>
+      </div>
+    </section>
+  </div>
+
   <div class="pagina" id="pg-tema"><section class="diretorio"><div class="wrap" id="conteudoTema"></div></section></div>
 
   <!-- ARQUIVO -->
@@ -625,7 +671,7 @@ footer li a:hover{color:var(--laranja)}
         <h4>Portal</h4>
         <ul>
           <li><a href="#inicio">Início</a></li>
-          <li><a href="#explorar" data-rolar="explorar">Cidade de ideias</a></li>
+          <li><a href="#cidade">Cidade de ideias</a></li>
           <li><a href="#temas">Todos os temas</a></li>
           <li><a href="#arquivo">Arquivo de verbetes</a></li>
           <li><a href="#portfolio">Portfólio</a></li>
@@ -4148,7 +4194,7 @@ function mostrar(){
   else if(h.startsWith("post/")) pagina = renderPost(h.slice(5)) ? "post" : "temas";
   else if(h==="arquivo"){ renderArquivo(); pagina="arquivo"; }
   else if(h==="artigos"){ filtroArquivo="artigos"; renderArquivo(); pagina="arquivo"; }
-  else if(["inicio","temas","portfolio","sobre"].includes(h)) pagina = h;
+  else if(["inicio","temas","portfolio","sobre","cidade"].includes(h)) pagina = h;
   else if(h==="explorar"){ pagina="inicio"; }
   document.querySelectorAll(".pagina").forEach(p=>p.classList.toggle("visivel",p.id==="pg-"+pagina));
   const ativo = pagina==="tema" ? "temas" : (pagina==="post" ? "arquivo" : pagina);
@@ -4157,6 +4203,7 @@ function mostrar(){
   if(h==="explorar"){ setTimeout(()=>document.getElementById("explorar").scrollIntoView({behavior:"smooth"}),50); }
   else window.scrollTo(0,0);
   if(pagina==="inicio") iniciarGrafo();
+  if(pagina==="cidade") iniciarGrafo({caixa:"grafoCidade",tip:"tooltipCidade",painel:"painelCidade",legenda:"legendaCidade",grande:true});
   observarRevelar();
 }
 if(MODO_HASH) window.addEventListener("hashchange",mostrar);
@@ -4220,13 +4267,16 @@ window.addEventListener("scroll",()=>{
 cab.addEventListener("mouseenter",()=>cab.classList.remove("compacto"));
 
 /* Nuvem de pontos, desenhada em canvas para ficar leve e fluida */
-let grafoPronto=false;
-function iniciarGrafo(){
-  if(grafoPronto || typeof d3==="undefined") return;
-  const caixa=document.getElementById("grafo");
+const grafosProntos={};
+/* cfg: ids dos elementos da nuvem; grande=true na página própria, com mais detalhe e nomes visíveis */
+function iniciarGrafo(cfg){
+  cfg=cfg||{caixa:"grafo",tip:"tooltip",painel:"painel",legenda:"legenda",grande:false};
+  if(grafosProntos[cfg.caixa] || typeof d3==="undefined") return;
+  const caixa=document.getElementById(cfg.caixa);
+  const grande=!!cfg.grande;
   const largura=caixa.clientWidth, altura=caixa.clientHeight;
   if(!largura) return;
-  grafoPronto=true;
+  grafosProntos[cfg.caixa]=true;
   const pequeno = largura<600;
   const semMovimento=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -4254,10 +4304,10 @@ function iniciarGrafo(){
   nos.forEach(n=>n.grau=grau[n.id]||0);
   const grausNaoTema=nos.filter(n=>n.tipo!=="tema").map(n=>n.grau);
   const gMin=Math.min(...grausNaoTema), gMax=Math.max(...grausNaoTema);
-  const rMaior=pequeno?13:18, rTema=pequeno?20:26;
+  const rMaior=grande?(pequeno?15:24):(pequeno?13:18), rTema=grande?(pequeno?24:36):(pequeno?20:26);
   const raioBase=d=> d.tipo==="tema" ? rTema : 1+(rMaior-1)*Math.pow((d.grau-gMin)/Math.max(1,gMax-gMin),.6);
   const opBase=d=>({pessoa:.22,conceito:.3,instituicao:.95,software:.85,estudo:.4,obra:.6})[d.tipo] ?? .6;
-  const alcance=pequeno?70:120;
+  const alcance=grande?(pequeno?80:150):(pequeno?70:120);
   let mouse=null, sel=null, selViz=null, hover=null;
   const inicio=performance.now();
   nos.forEach((n,i)=>{ n.fase=Math.random()*Math.PI*2; n.k=0; n.ordem=i; n.r=0; n.oculto=false; });
@@ -4279,8 +4329,8 @@ function iniciarGrafo(){
 
   /* Simulação: forças de ligação, repulsão e uma brisa leve que faz a nuvem respirar */
   const sim=d3.forceSimulation(nos)
-    .force("link",d3.forceLink(links).id(d=>d.id).distance(d=>d.extra?(pequeno?110:150):d.ref?(pequeno?28:38):(pequeno?44:62)).strength(d=>d.ref?.35:.7))
-    .force("charge",d3.forceManyBody().theta(1.1).strength(d=>d.tipo==="tema"?(pequeno?-300:-620):-(14+raioBase(d)*(pequeno?4:7))))
+    .force("link",d3.forceLink(links).id(d=>d.id).distance(d=>(grande?1.7:1)*(d.extra?(pequeno?110:150):d.ref?(pequeno?28:38):(pequeno?44:62))).strength(d=>d.ref?.35:.7))
+    .force("charge",d3.forceManyBody().theta(1.1).strength(d=>(grande?2:1)*(d.tipo==="tema"?(pequeno?-300:-620):-(14+raioBase(d)*(pequeno?4:7)))))
     .force("center",d3.forceCenter(largura/2,altura/2))
     .force("x",d3.forceX(largura/2).strength(.04)).force("y",d3.forceY(altura/2).strength(.06))
     .force("colisao",d3.forceCollide().radius(d=>raioBase(d)+(d.tipo==="tema"?14:2.5)).iterations(1))
@@ -4295,7 +4345,9 @@ function iniciarGrafo(){
     f.initialize=n=>lista=n; return f; })());
 
   /* Desenho de cada quadro */
-  const fonte=`500 ${pequeno?11:12}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  const fonte=`500 ${grande?(pequeno?13:16):(pequeno?11:12)}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  let kRotulos=1;
+  const fonteEm=px=>`500 ${px}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
   function visivelLink(l){ return !l.source.oculto && !l.target.oculto; }
   function desenhar(){
     const agora=performance.now();
@@ -4324,7 +4376,7 @@ function iniciarGrafo(){
           if(sel && esmaecido !== !(l.source===sel||l.target===sel)) continue;
           ctx.moveTo(l.source.x,l.source.y); ctx.lineTo(l.target.x,l.target.y);
         }
-        ctx.globalAlpha=gr.a*(esmaecido?.12:1); ctx.strokeStyle=gr.cor; ctx.lineWidth=gr.w; ctx.setLineDash(gr.dash); ctx.stroke();
+        const afina=grande?Math.max(1,transform.k*.7):1; ctx.globalAlpha=gr.a*(esmaecido?.12:1); ctx.strokeStyle=gr.cor; ctx.lineWidth=gr.w/afina; ctx.setLineDash(gr.dash.map(x=>x/afina)); ctx.stroke();
       }
     }
     /* Segundo traço de grafite, levemente deslocado, nas ligações principais */
@@ -4355,10 +4407,26 @@ function iniciarGrafo(){
     ctx.setLineDash([]); ctx.font=fonte; ctx.textAlign="center"; ctx.textBaseline="top"; ctx.lineJoin="round";
     for(const d of nos){
       if(d.tipo!=="tema"||d.oculto) continue;
-      const txt=d.nome.split(",")[0].toLowerCase(), y=d.y+d.r+6;
+      const txt=d.nome.split(",")[0].toLowerCase(), y=d.y+d.r+(grande?6/transform.k:6);
       ctx.globalAlpha=sel?(selViz.has(d)?1:.25):1;
-      ctx.lineWidth=4; ctx.strokeStyle="#FAF7F1"; ctx.strokeText(txt,d.x,y);
+      if(grande) ctx.font=fonteEm((pequeno?14:17)/transform.k);
+      ctx.lineWidth=grande?5/transform.k:4; ctx.strokeStyle="#FAF7F1"; ctx.strokeText(txt,d.x,y);
       ctx.fillStyle="#1A1916"; ctx.fillText(txt,d.x,y);
+    }
+    if(grande){
+      const k=transform.k, x0=-transform.x/k, y0=-transform.y/k, x1=x0+largura/k, y1=y0+altura/k;
+      const verAssuntos=k>=kRotulos, verTodos=k>=kRotulos*2.2;
+      ctx.lineWidth=3/k; ctx.strokeStyle="#FAF7F1";
+      for(const d of nos){
+        if(d.oculto||d.tipo==="tema") continue;
+        const ehAssunto=d.tipo==="assunto";
+        if(!(sel && selViz.has(d)) && (ehAssunto ? !verAssuntos : !verTodos)) continue;
+        if(d.x<x0-40||d.x>x1+40||d.y<y0-40||d.y>y1+40) continue;
+        ctx.font=fonteEm((ehAssunto?12:10.5)/k);
+        ctx.globalAlpha=sel?(selViz.has(d)?1:.18):(ehAssunto?.95:.8);
+        const y=d.y+d.r+3/k, txt=d.nome.toLowerCase();
+        ctx.strokeText(txt,d.x,y); ctx.fillStyle=ehAssunto?"#1A1916":"#5F5B53"; ctx.fillText(txt,d.x,y);
+      }
     }
     ctx.globalAlpha=1;
   }
@@ -4379,7 +4447,7 @@ function iniciarGrafo(){
     return isFinite(x0)?{x0,y0,x1,y1}:{x0:0,y0:0,x1:largura,y1:altura};
   }
   const margemVisivel=pequeno?60:120;
-  const zoom=d3.zoom().scaleExtent([.6,5])
+  const zoom=d3.zoom().scaleExtent([grande?.3:.6,grande?10:5])
     .constrain(t=>{
       /* mantém sempre ao menos uma faixa da nuvem dentro do quadro */
       const b=limitesNuvem();
@@ -4398,7 +4466,7 @@ function iniciarGrafo(){
     .on("end",e=>{ if(!e.active) sim.alphaTarget(semMovimento?0:.02); e.subject.fx=null; e.subject.fy=null; canvas.style.cursor="grab"; });
   sel3.call(arrasto).call(zoom).on("dblclick.zoom",null);
 
-  const tip=document.getElementById("tooltip");
+  const tip=document.getElementById(cfg.tip);
   sel3.on("mousemove.nuvem",e=>{
     const [px,py]=d3.pointer(e,canvas);
     mouse=transform.invert([px,py]);
@@ -4416,11 +4484,11 @@ function iniciarGrafo(){
   sel3.on("dblclick.nuvem",e=>{ const [px,py]=d3.pointer(e,canvas); const d=noPonto(px,py); if(d) navegar(d.tipo==="tema" ? linkTema(d.tema) : linkPost(d.id)); });
 
   /* Painel lateral */
-  const painel=document.getElementById("painel");
+  const painel=document.getElementById(cfg.painel);
   const painelInicial=painel.innerHTML;
   function limparSelecao(){
     if(!sel) return;
-    sel=null; selViz=null; painel.innerHTML=painelInicial; pedirDesenho();
+    sel=null; selViz=null; painel.innerHTML=painelInicial; painel.classList.remove("aberto"); pedirDesenho();
   }
   function vizinhos(d){ const s=new Set([d]); for(const l of links){ if(l.source===d) s.add(l.target); if(l.target===d) s.add(l.source); } return s; }
   function selecionar(d){
@@ -4432,22 +4500,24 @@ function iniciarGrafo(){
       ? `<button class="chip chip-tema" style="--cor-tema:${o.cor}" data-id="${esc(o.id)}"><i></i>${esc(o.nome)}</button>`
       : `<button class="chip chip-ponto" style="--cor-tema:${o.cor}" data-id="${esc(o.id)}"><i></i>${esc(o.nome)}</button>`).join("")+(outros.length>40?`<span class="chip">+${outros.length-40}</span>`:"");
     if(d.tipo==="tema"){
-      painel.innerHTML=`<div class="arte-mini">${d.tema.arte}</div><div class="rotulo" style="color:${d.cor}">tema ${String(d.tema.n).padStart(2,"0")}</div>
+      painel.innerHTML=`<button class="fechar-painel" data-fechar-painel aria-label="fechar">×</button><div class="arte-mini">${d.tema.arte}</div><div class="rotulo" style="color:${d.cor}">tema ${String(d.tema.n).padStart(2,"0")}</div>
         <h3>${esc(d.nome)}</h3><p>${esc(d.tema.desc)}</p><div class="conexoes">${chips}</div>
-        <div class="acoes"><a class="btn btn-escuro" href="${linkTema(d.tema)}">abrir diretório <span class="seta">→</span></a><button class="btn btn-linha" id="limpar">ver tudo</button></div>`;
+        <div class="acoes"><a class="btn btn-escuro" href="${linkTema(d.tema)}">abrir diretório <span class="seta">→</span></a><button class="btn btn-linha" data-limpar>ver tudo</button></div>`;
     } else {
       const v=VB[d.id];
-      painel.innerHTML=`<div class="rotulo" style="color:${d.cor}">${NOME_TIPO[d.tipo]||"assunto"} · ${esc(d.tema.nome.split(",")[0])}</div>
+      painel.innerHTML=`<button class="fechar-painel" data-fechar-painel aria-label="fechar">×</button><div class="rotulo" style="color:${d.cor}">${NOME_TIPO[d.tipo]||"assunto"} · ${esc(d.tema.nome.split(",")[0])}</div>
         <h3>${esc(d.nome)}</h3><p>${v?esc(v.resumo):""}</p><div class="conexoes">${chips}</div>
-        <div class="acoes"><a class="btn btn-escuro" href="${linkPost(d.id)}">ler verbete <span class="seta">→</span></a><button class="btn btn-linha" id="limpar">ver tudo</button></div>`;
+        <div class="acoes"><a class="btn btn-escuro" href="${linkPost(d.id)}">ler verbete <span class="seta">→</span></a><button class="btn btn-linha" data-limpar>ver tudo</button></div>`;
     }
     painel.querySelectorAll("button.chip").forEach(c=>c.addEventListener("click",()=>{ const n=nos.find(x=>x.id===c.dataset.id); if(n) selecionar(n); }));
-    const l=document.getElementById("limpar"); if(l) l.addEventListener("click",limparSelecao);
+    const l=painel.querySelector("[data-limpar]"); if(l) l.addEventListener("click",limparSelecao);
+    const f=painel.querySelector("[data-fechar-painel]"); if(f) f.addEventListener("click",limparSelecao);
+    if(grande) painel.classList.add("aberto");
   }
 
   /* Legenda com filtro por tema e por tipo */
   const ocultos=new Set(), tiposOcultos=new Set();
-  const leg=document.getElementById("legenda");
+  const leg=document.getElementById(cfg.legenda);
   leg.innerHTML=temas.map(t=>`<button data-tema="${t.id}"><i style="background:${t.cor}"></i>${esc(t.nome.split(",")[0])}</button>`).join("")
     +`<span class="leg-sep"></span>`+ORDEM_TIPOS.map(tp=>`<button data-tipo="${tp}"><i class="tipo-${tp}"></i>${TIPOS_PLURAL[tp]}</button>`).join("");
   leg.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
@@ -4461,9 +4531,9 @@ function iniciarGrafo(){
   setTimeout(()=>{
     const xs=nos.map(n=>n.x), ys=nos.map(n=>n.y), m=40;
     const x0=Math.min(...xs)-m, x1=Math.max(...xs)+m, y0=Math.min(...ys)-m, y1=Math.max(...ys)+m;
-    const k=Math.min(1.4, largura/(x1-x0), altura/(y1-y0));
+    const k=Math.min(grande?1.2:1.4, largura/(x1-x0), altura/(y1-y0))*(grande?.92:1);
     /* o menor zoom permitido é um pouco menor que o enquadramento inicial: dá para ver a nuvem inteira, mas não deixá-la sumir */
-    zoom.scaleExtent([k*.75,5]);
+    zoom.scaleExtent([k*.75,grande?10:5]); kRotulos=k*1.35;
     sel3.transition().duration(900).call(zoom.transform, d3.zoomIdentity.translate(largura/2,altura/2).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
   },2600);
 
