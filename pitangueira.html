@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pitangueira em RA</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
+    #aviso {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      z-index: 10; background: rgba(0,0,0,.65); color: #fff;
+      padding: 10px 18px; border-radius: 20px; font-size: 15px; text-align: center;
+      transition: opacity .4s;
+    }
+    #aviso.oculto { opacity: 0; }
+  </style>
+</head>
+<body>
+  <div id="aviso">Aponte a câmera para o QR code na folha 🌱</div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: alvo.mind; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <a-asset-item id="arvore" src="pitangueira.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
+    <a-entity light="type: directional; intensity: 2" position="1 2 2"></a-entity>
+
+    <!-- A largura da imagem do QR = 1 unidade. A árvore tem 3 unidades;
+         scale 0.3 deixa ela com ~0.9x a largura do QR. Ajuste à vontade. -->
+    <a-entity id="alvo" mindar-image-target="targetIndex: 0">
+      <a-gltf-model src="#arvore" rotation="90 0 0" scale="0.3 0.3 0.3"></a-gltf-model>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const aviso = document.getElementById('aviso');
+    const alvo = document.getElementById('alvo');
+    alvo.addEventListener('targetFound', () => aviso.classList.add('oculto'));
+    alvo.addEventListener('targetLost',  () => aviso.classList.remove('oculto'));
+  </script>
+</body>
+</html>
