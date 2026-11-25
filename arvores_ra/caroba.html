@@ -192,10 +192,11 @@
 
   <script>
     // ---- barra de crescimento ----
-    // Cada estágio tem um modelo próprio, já no tamanho daquela idade, para que a
+    // Cada estágio tem um modelo próprio, com a forma de uma árvore daquela idade
+    // (tronco fino, poucos galhos, copa estreita e mais rala; muda de 2 anos com tutor), para que a
     // realidade aumentada (iPhone e Android) abra a árvore na altura certa.
     // Enquanto o dedo arrasta, o modelo carregado é só redimensionado (instantâneo).
-    const ESTAGIOS = [{"rotulo": "2 anos", "idade": 2, "fator": 0.3057, "arquivo": "caroba_2anos.glb", "nota": "Muda jovem, ainda sem flores."}, {"rotulo": "5 anos", "idade": 5, "fator": 0.55026, "arquivo": "caroba_5anos.glb", "nota": "Pode dar as primeiras flores."}, {"rotulo": "10 anos", "idade": 10, "fator": 0.85596, "arquivo": "caroba_10anos.glb", "nota": "Já perto do porte adulto."}, {"rotulo": "Adulta", "idade": null, "fator": 1, "arquivo": "caroba.glb", "nota": "Porte adulto, alcançado por volta de 12–15 anos."}];
+    const ESTAGIOS = [{"rotulo": "2 anos", "idade": 2, "fator": 0.3057, "arquivo": "caroba_2anos.glb", "nota": "Muda jovem, ainda sem flores.", "copa": 1.01}, {"rotulo": "5 anos", "idade": 5, "fator": 0.55026, "arquivo": "caroba_5anos.glb", "nota": "Pode dar as primeiras flores.", "copa": 2.61}, {"rotulo": "10 anos", "idade": 10, "fator": 0.85596, "arquivo": "caroba_10anos.glb", "nota": "Já perto do porte adulto.", "copa": 7.4}, {"rotulo": "Adulta", "idade": null, "fator": 1, "arquivo": "caroba.glb", "nota": "Porte adulto, alcançado por volta de 12–15 anos.", "copa": 11.22}];
     const ALTURA_ADULTA = 8.18;
     const COPA_ADULTA = 11.22;
 
@@ -224,6 +225,14 @@
       return ESTAGIOS[i].fator + (ESTAGIOS[i + 1].fator - ESTAGIOS[i].fator) * t;
     }
 
+    // a copa de árvore jovem é proporcionalmente mais estreita que a adulta,
+    // por isso cada estágio guarda a sua própria largura de copa
+    function copaEm(v) {
+      const i = Math.min(Math.floor(v), ESTAGIOS.length - 2);
+      const t = v - i;
+      return ESTAGIOS[i].copa + (ESTAGIOS[i + 1].copa - ESTAGIOS[i].copa) * t;
+    }
+
     function mostrarTexto(v, fator) {
       const i = Math.round(v);
       const e = ESTAGIOS[i];
@@ -235,7 +244,7 @@
                        : 'mais de 10 anos';
       }
       elIdade.textContent = rotulo;
-      const altura = ALTURA_ADULTA * fator, copa = COPA_ADULTA * fator;
+      const altura = ALTURA_ADULTA * fator, copa = copaEm(v);
       elMed.innerHTML = `≈ <b>${fmt(altura)} m</b> de altura<br>copa ≈ ${fmt(copa)} m`;
       const pct = Math.round(fator * 100);
       elNota.innerHTML = (i < 3 ? `<span id="est-pct">${pct}% do tamanho adulto.</span> ` : '') + e.nota;
