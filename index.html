@@ -7,6 +7,14 @@
 /* Endereços sem "#": o site usa /sobre, /arquivo, /post/... em vez de /#sobre.
    Se o site ficar numa subpasta (ex.: usuario.github.io/tebas/), troque "/" por "/tebas/". */
 window.TEBAS_BASE = "/";
+/* Redirecionamento: tebas.arq.br/floema -> tebas.arq.br/arvores_ra */
+(function(){
+  var p = location.pathname.replace(/\/+$/,"").toLowerCase();
+  var h = location.hash.replace(/^#\/?/,"").replace(/\/+$/,"").toLowerCase();
+  if(p === "/floema" || p.endsWith("/floema") || (location.protocol!=="file:" && h === "floema")){
+    location.replace("/arvores_ra" + location.search);
+  }
+})();
 if(location.protocol!=="file:"){ const b=document.createElement("base"); b.href=window.TEBAS_BASE; document.head.prepend(b); }
 </script>
 <!-- ícones do site: triângulo branco sobre quadrado preto -->
